@@ -1,0 +1,46 @@
+services:
+  app:
+    build:
+      context: .
+      dockerfile: ./src/docker/Dockerfile
+    ports:
+      - "127.0.0.1:${APP_PORT}:${APP_PORT}"
+    volumes:
+      - type: bind
+        source: .
+        target: /app
+      - type: volume
+        source: trainingproject-node-modules
+        target: /app/node_modules
+      - type: volume
+        source: trainingproject-nuxt
+        target: /app/.nuxt
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      PRISMA_DATABASE_CONNECTION_URL: "mysql://root:${MYSQL_ROOT_PASSWORD}@db:3306/${MYSQL_DATABASE}"
+      APP_PORT: ${APP_PORT}
+      DB_PORT: ${DB_PORT}
+    command: /app/docker/entrypoint.sh
+
+  db:
+    build:
+      context: src
+      dockerfile: ./docker/Dockerfile.db
+    ports:
+      - "127.0.0.1:${DB_PORT}:${DB_PORT}"
+    environment:
+      MYSQL_DATABASE: ${MYSQL_DATABASE}
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      MYSQL_USER: ${MYSQL_USER}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-p${MYSQL_ROOT_PASSWORD}"]
+      interval: 15s
+      timeout: 10s
+      retries: 3
+
+volumes:
+  trainingproject-node-modules:
+  trainingproject-nuxt:

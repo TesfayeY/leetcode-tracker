@@ -1,0 +1,76 @@
+# MySQL database credentials (All required)
+# The username for the MYSQL DATABASE (e.g., root_user)
+# Used to connect to the database directly 
+MYSQL_USER=
+
+#The password for the MYSQL user to access the database:
+MYSQL_PASSWORD=
+
+# The root password for MySQL (ensure it is secure)
+# Illegal special characters (Don't use these): @ ` ' " ; & | $ % \ / < > ( ) * ? [ ] { } 
+MYSQL_ROOT_PASSWORD=
+
+# The name of the MySQL database to create/use
+MYSQL_DATABASE=
+
+
+# JSON Web Token secret (Required)
+# A secret key used for generating and signing JSON Web Tokens for authentication
+JWT_SECRET=
+
+# Ports for the app and database containers (All Required)
+# The port on which the app container will run
+APP_PORT=       
+
+# The port on which the database container will run
+DB_PORT=
+
+# Below are the configs for Sentry event reporting
+# The environment setting of this application to report to Sentry (development/production) (Omitted for production environment)
+SENTRY_ENV=
+
+# The data source name (DSN) of the Sentry projects. (Omitted if do not want to report)
+SENTRY_DSN_BACKEND=
+SENTRY_DSN_FRONTEND=
+
+# The organization slug on Sentry (Required if the DSN are set)
+SENTRY_ORG=
+
+# The client project name on Sentry (Required if the DSN is set)
+SENTRY_CLIENT_PROJECT=
+
+# These variables below are for the event filtering and sampling, 
+# The implementation is located in the sentry.client.config.ts and sentry.server.config.ts files
+# Enable/Disable the status code filtering before send (true/false) (Omitted for false)
+SENTRY_IS_FILTER_STATUS=
+
+# Breadcrumbs list to be filtered before send (Omitted if no filtering)
+# Each item is separated by a comma (Ex: console,fetch,ui.click)
+SENTRY_LIST_FILTER_BREADCRUMB=
+
+# The default trace sampling rate (0 <= float <= 1) (Omitted for no monitoring/default to 0)
+SENTRY_DEFAULT_TRACE_RATE=
+
+# The user replay sampling rate (0 <= float <= 1) (Omitted for no monitoring/default to 0)
+# You may want this to be 1.0 while in development and sample at a lower rate in production
+SENTRY_USER_REPLAY_RATE=
+
+# The error replay sampling rate (0 <= float <= 1) (Omitted for no monitoring/default to 0)
+SENTRY_ERROR_REPLAY_RATE=
+
+# Enable/Disable console log debugging for Sentry (true/false) (Omitted for no debugging)
+SENTRY_IS_DEBUG=
+
+# Note:
+# 1. The JSON Web Token (JWT_SECRET) is used for authentication and should be a secure, secret key.
+# 2. Avoid using single-digit numbers for database credentials to prevent syntax errors.
+#    Use meaningful, descriptive names instead.
+# 3. Ensure MYSQL_USER, MYSQL_ROOT_PASSWORD and MYSQL_DATABASE are correctly set
+#    and match the corresponding values in your application configuration.
+# 4. The DSN for the Sentry portal can be obtained in the Sentry.io corresponding project settings.
+#    SENTRY_DSN_CLIENT is for event reportings that come from client side, 
+#    SENTRY_DSN_API is for event reportings that come from the server side.
+#    It is possible to set both variables to point at the same DSN for combined client and server reportings.
+# 5. The organization slug can be found on Sentry.io organization settings.
+#    The project name is display on the Projects tab on Sentry.io.
+# 6. The breadcrumb type can be found under Breadcrumb View in Sentry.io

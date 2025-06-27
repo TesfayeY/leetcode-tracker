@@ -1,0 +1,10 @@
+# Dockerfile.db
+FROM mariadb:10.11
+
+# Copy the initdb.sh script and make it executable 
+# (Docker context is `<repo>/src/.` )
+COPY ./docker/initdb.sh /docker-entrypoint-initdb.d/initdb.sh
+RUN chmod +x /docker-entrypoint-initdb.d/initdb.sh
+
+# Expose the port MariaDB will run on
+EXPOSE ${DB_PORT}
