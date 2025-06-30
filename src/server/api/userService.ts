@@ -3,6 +3,24 @@ import bcrypt from 'bcrypt';
 import prisma from '../../database/db';
 import { createJwtToken, extractUserIdFromToken } from '../../jwt';
 
+export async function getUserData(event: H3Event) {
+  const cookies = parseCookies(event);
+  const extractedUserId = await extractUserIdFromToken(cookies.token);
+  const userId = extractedUserId !== null ? extractedUserId : undefined;
+
+  if (userId === undefined) {
+      throw createError({statusCode: 401, statusMessage:'Invalid user'});
+  }
+
+  const user = await prisma.user.findUnique({ where: { id: userId } });
+
+  if (!user) {
+      throw createError({statusCode: 401, statusMessage:'Invalid user'});
+  }
+
+  return { data: { id: user.id, name: user.name, lcUsername: user.lc_username }, message: "Successfully retrieve user" }
+}
+
 export async function changeDisplayName(event: H3Event) {
     const body = await readBody(event);
     const { newName } = body;
