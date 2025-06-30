@@ -1,0 +1,19 @@
+query ($username: String!) {
+    createdPublicFavoriteList(userSlug: $username) {
+        favorites {
+            description
+            hasCurrentQuestion
+            isPublicFavorite
+            name
+            questionNumber
+            viewCount
+        }
+        hasMore
+        totalLength
+    }
+}
+
+# Variable
+# {
+#     "username": string
+# }

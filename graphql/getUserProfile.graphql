@@ -1,0 +1,41 @@
+query ($username: String!, $numRecentSubmission: Int = 10) {
+    matchedUser(username: $username) {
+        username
+        githubUrl
+        linkedinUrl
+        profile {
+            realName
+            userAvatar
+            reputation
+            ranking
+            skillTags
+            certificationLevel
+            solutionCount
+        }
+        submitStats {
+            acSubmissionNum {
+                difficulty
+                count
+                submissions
+            }
+            totalSubmissionNum {
+                difficulty
+                count
+                submissions
+            }
+        }
+    }
+    recentSubmissionList(username: $username, limit: $numRecentSubmission) {
+        title
+        titleSlug
+        timestamp
+        statusDisplay
+        lang
+    }
+}
+
+# Variables
+# {
+#   "username": string,
+#   "numRecentSubmission": int
+# }

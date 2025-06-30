@@ -1,0 +1,13 @@
+query ($username: String!) {
+    matchedUser(username: $username) {
+        languageProblemCount {
+            languageName
+            problemsSolved
+        }
+    }
+}
+
+# Variable
+# {
+#     "username": string
+# }

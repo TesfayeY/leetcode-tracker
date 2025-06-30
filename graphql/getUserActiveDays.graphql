@@ -1,0 +1,15 @@
+query ($username: String!) {
+    matchedUser(username: $username) {
+        userCalendar {
+            activeYears
+            streak
+            submissionCalendar
+            totalActiveDays
+        }
+    }
+}
+
+# Variable
+# {
+#     "username": string
+# }
