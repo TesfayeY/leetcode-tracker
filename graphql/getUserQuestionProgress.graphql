@@ -1,0 +1,28 @@
+query ($username: String!) {
+    userProfileUserQuestionProgressV2(userSlug: $username) {
+        numAcceptedQuestions {
+            difficulty
+            count
+        }
+        numFailedQuestions {
+            difficulty
+            count
+        }
+        numUntouchedQuestions {
+            difficulty
+            count
+        }
+        totalQuestionBeatsPercentage
+        # This indicates the percentage of problems solved
+        # from this user compared to the rest of userbase
+        userSessionBeatsPercentage {
+            difficulty
+            percentage
+        }
+    }
+}
+
+# Variable
+# {
+#     "username": string
+# }

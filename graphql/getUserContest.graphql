@@ -1,0 +1,16 @@
+query ($username: String!) {
+    userContestRanking(username: $username) {
+        attendedContestsCount
+        globalRanking
+        totalParticipants
+        topPercentage
+        badge {
+            name
+        }
+    }
+}
+
+# Variable
+# {
+#     "username": string
+# }
