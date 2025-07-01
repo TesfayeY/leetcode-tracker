@@ -9,9 +9,8 @@
     ></InputModal>
   </div>
   <div v-else class="flex flex-col place-content-evenly h-[60vh]">
-    <p class="text-center text-3xl">Leetcode Profile: {{ lcUsername }}</p>
+    <UserCard :lcUsername="lcUsername"></UserCard>
   </div>
-  
 </template>
 
 <script lang="ts" setup>
@@ -19,6 +18,7 @@ import { useRoute } from 'vue-router';
 import { ref, onMounted } from 'vue';
 import { useErrorLogger } from '../../composables/useErrorLogger';
 import InputModal from '../../components/inputModal.vue';
+import UserCard from '../../components/userCard.vue';
 
 const { reportError } = useErrorLogger();
 const route = useRoute();
