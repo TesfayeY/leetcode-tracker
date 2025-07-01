@@ -6,7 +6,7 @@
         <UInput v-model="inputField" type="text"/>
       </UFormGroup>
       <div class="mt-5 flex flex-end gap-4">
-        <UButton class="p-2 px-3 text-md" type="submit" @click="sendFormToParent">Submit</UButton>
+        <UButton v-bind:disabled="inputField === ''" class="p-2 px-3 text-md" type="submit" @click="sendFormToParent">Submit</UButton>
         <UButton class="p-2 px-3 text-md" @click="closeModal">Close</UButton>
       </div>
     </div>
