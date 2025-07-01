@@ -16,6 +16,7 @@
   import { ref, onMounted, watch } from 'vue';
   import { useRoute } from 'vue-router';
   import Navbar from '../components/navbar.vue';
+  import UserMenu from '../components/UserMenu.vue';
   </script>
 
 <style>

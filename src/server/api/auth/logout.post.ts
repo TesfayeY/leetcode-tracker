@@ -5,6 +5,7 @@ export default defineEventHandler(async (event) => {
     setCookie(event,"id" , "", { maxAge: -1 });
     
     return {
-        success: true
+        success: true,
+        message: 'Logged out successfully'
     };
 });
