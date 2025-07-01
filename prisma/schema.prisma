@@ -18,4 +18,5 @@ model User {
   name     String
   email    String  @unique @db.VarChar(320)
   password String
+  lc_username String @unique @db.VarChar(240) @default("")
 }
