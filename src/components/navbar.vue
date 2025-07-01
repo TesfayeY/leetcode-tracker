@@ -20,6 +20,9 @@
     </ul>
   </nav>
   <UDivider :avatar="{ src: '/img/logo-sq.png' }" />
+  <div class ="flex flex-row justify-end">
+          <UserMenu />
+        </div>
 </template>
 
 <script setup>
@@ -27,6 +30,7 @@ import { useRouter } from 'vue-router';
 import { useCookie } from '#app';
 import { computed } from 'vue';
 import * as Sentry from "@sentry/nuxt";
+import UserMenu from './UserMenu.vue';
 
 const router = useRouter();
 
