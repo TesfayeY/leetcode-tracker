@@ -16,7 +16,7 @@
 <script setup lang="ts">
 import { ref, defineProps } from 'vue';
 
-const props = defineProps(['lcUsername'])
+const props = defineProps(['lcUsername']);
 
 const lcUsername = ref(props.lcUsername);
 </script>

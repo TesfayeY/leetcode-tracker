@@ -1,7 +1,7 @@
 <template>
   <div class="fixed top-0 bottom-0 left-0 right-0 flex justify-center items-center bg-[#000000da]">
     <div class="modal rounded-lg bg-[#363636] to-10% p-5 h-fit w-[500px] text-left">
-      <h1 class="text-left text-lg ">Add Leetcode Username</h1>
+      <div class="text-left text-lg">{{ modalTitle }}</div>
       <UFormGroup class="mt-5">
         <UInput v-model="inputField" type="text"/>
       </UFormGroup>
@@ -15,17 +15,25 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue';
+import { ref, defineProps, onMounted, onUnmounted } from 'vue';
+
+const props = defineProps(['title']);
 
 const inputField = ref('');
+const modalTitle = ref('');
 const emit = defineEmits(['submit-form', 'close-modal']);
 
+onMounted(() => {
+  modalTitle.value = props.title;
+})
+
 // These function will emit the control and value back to the parent 
-function sendFormToParent() {
+const sendFormToParent = () => {
   emit('submit-form', inputField.value);
+  emit('close-modal');
 }
 
-function closeModal() {
+const closeModal = () => {
   emit('close-modal')
 }
 
