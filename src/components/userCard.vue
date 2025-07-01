@@ -14,9 +14,15 @@
 </template>
 
 <script setup lang="ts">
-import { ref, defineProps } from 'vue';
+import { ref, defineProps, watch } from 'vue';
 
 const props = defineProps(['lcUsername']);
 
 const lcUsername = ref(props.lcUsername);
+
+// This will watch for the props update in parent to pass back to children
+watch(() => props.lcUsername, (updateValue: string) => {
+  lcUsername.value = updateValue
+});
+
 </script>
