@@ -4,6 +4,7 @@
       <li><a class="rounded-full" href="/welcome" @click.prevent="navigate('/welcome')">Home</a></li>
       <li><a class="rounded-full" href="/settings" @click.prevent="navigate('/settings')">Settings</a></li>
       <li><a class="rounded-full" href="https://github.com/bioneos/training-project/tree/main" target="_blank">Repo</a></li>
+      <li><a class="rounded-full" v-bind:href="'/users' + displayName" @click.prevent="navigate(`/users/${displayName}`)">Profile</a></li>
       <li><a class="rounded-full" href="#" @click.prevent="logout">Logout</a></li>
       <li>
         <ClientOnly>
@@ -23,7 +24,7 @@
 
 <script setup>
 import { useRouter } from 'vue-router';
-//import { useCookie } from '#app'; // Ensure you import useCookie
+import { useCookie } from '#app';
 import { computed } from 'vue';
 import * as Sentry from "@sentry/nuxt";
 
@@ -89,6 +90,8 @@ const isDark = computed({
     colorMode.preference = colorMode.value === 'dark' ? 'light' : 'dark';
   }
 });
+
+const displayName = useCookie('name').value;
 
 </script>
 
