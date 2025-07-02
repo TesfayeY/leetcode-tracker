@@ -17,7 +17,6 @@
     @close-modal="closeModal" 
     @submit-form="handleInputFormModal"
   ></InputModal>
-  
 </template>
 
 <script lang="ts" setup>
@@ -59,7 +58,7 @@ onMounted(async () => {
       },
     })
 
-    if (response.success) {
+    if (response.data) {
       hasLeetcodeProfile.value = response.data.lcUsername !== "";
       lcUsername.value = response.data.lcUsername;
     }

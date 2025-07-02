@@ -1,3 +1,32 @@
+<template>
+  <div class="flex flex-col place-content-evenly h-[60vh] mt-5">
+    <div class="text-center">
+      <h1 class="text-3xl font-semibold mb-8">Welcome, {{ userName }}!</h1>
+
+      <button
+        @click="openCreateGroupModal"
+        class="w-48 py-3 mb-4 rounded-lg shadow-md
+               bg-green-600 text-white font-medium
+               hover:bg-blue-700 transition"
+      >
+        Create Group
+      </button>
+
+      <button
+        @click="openJoinGroupModal"
+        class="w-48 py-3 mb-4 rounded-lg shadow-md
+               bg-green-600 text-white font-medium border 
+               hover:bg-blue-700 transition"
+      >
+        Join Group
+      </button>
+    </div>
+
+    <CreateGroupModal v-if="showCreateGroupModal" @close="closeCreateGroupModal" />
+    <JoinGroupModal v-if="showJoinGroupModal" @close="closeJoinGroupModal" />
+  </div>
+</template>
+
 <script setup lang="ts">
 import { useRouter } from 'vue-router'
 import { ref } from 'vue';
@@ -36,31 +65,3 @@ function closeJoinGroupModal() {
 }
 </script>
 
-<template>
-  <div class="min-h-screen flex items-center justify-center px-4">
-    <div class="text-center">
-      <h1 class="text-3xl font-semibold mb-8">Welcome, {{ userName }}!</h1>
-
-      <button
-        @click="openCreateGroupModal"
-        class="w-48 py-3 mb-4 rounded-lg shadow-md
-               bg-green-600 text-white font-medium
-               hover:bg-blue-700 transition"
-      >
-        Create Group
-      </button>
-
-      <button
-        @click="openJoinGroupModal"
-        class="w-48 py-3 mb-4 rounded-lg shadow-md
-               bg-green-600 text-white font-medium border 
-               hover:bg-blue-700 transition"
-      >
-        Join Group
-      </button>
-    </div>
-
-    <CreateGroupModal v-if="showCreateGroupModal" @close="closeCreateGroupModal" />
-    <JoinGroupModal v-if="showJoinGroupModal" @close="closeJoinGroupModal" />
-  </div>
-</template>

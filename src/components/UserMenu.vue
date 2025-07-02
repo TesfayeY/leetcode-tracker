@@ -1,5 +1,5 @@
 <template>
-  <div class="" @keydown.escape="isOpen = false">
+  <div @keydown.escape="isOpen = false">
     <button
       @click="isOpen = !isOpen"
       class="focus:outline-none p-1"
@@ -16,47 +16,57 @@
     <transition name="fade">
       <ul
         v-if="isOpen"
-        class="absolute right-0 mt-2 w-48 bg-white shadow-lg rounded-md overflow-hidden"
+        class="absolute right-0 mt-2 w-[150px] bg-[#363636] shadow-lg rounded-md overflow-hidden"
         role="menu"
       >
-        <li
-          @click="goTo('profile')"
-          class="flex items-center px-4 py-2 hover:bg-gray-300 cursor-pointer text-black"
+        <UButton
+          @click="goTo('welcome')"
+          class="flex items-center w-full text-lg justify-center hover:bg-gray-300 cursor-pointer text-black"
         >
-          <NuxtIcon name="hero-outline:user" class="w-5 h-5 mr-3 text-black-600" />
+          Home
+        </UButton>
+        <UButton
+          @click="goTo('users')"
+          class="flex mt-2 items-center w-full text-lg justify-center hover:bg-gray-300 cursor-pointer text-black"
+        >
           Profile
-        </li>
-        <li
+        </UButton>
+        <UButton
           @click="goTo('settings')"
-          class="flex items-center px-4 py-2 hover:bg-gray-300 cursor-pointer text-black"
+          class="flex mt-2 items-center w-full text-lg justify-center hover:bg-gray-300 cursor-pointer text-black"
         >
-          <NuxtIcon name="hero-outline:cog-6-tooth" class="w-5 h-5 mr-3 text-black-600" />
           Settings
-        </li>
-        <li
+        </UButton>
+        <UButton
           @click="logout"
-          class="flex items-center px-4 py-2 hover:bg-gray-300 cursor-pointer text-red-600"
+          class="flex mt-2 items-center w-full text-lg justify-center hover:bg-gray-300 cursor-pointer text-red-600"
         >
-          <NuxtIcon name="hero-outline:logout" class="w-5 h-5 mr-3" />
           Logout
-        </li>
+        </UButton>
       </ul>
     </transition>
   </div>
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
 
+const props = defineProps(['name']);
+const name = ref(props.name);
 
 const isOpen = ref(false)
 const router = useRouter()
 const user = { avatarUrl: '/img/avatar.png' } 
 
+watch(() => props.name, (updatedValue) => {
+  name.value = updatedValue;
+})
+
 function goTo(page) {
-  isOpen.value = false
-  router.push(`/${page}`)
+  isOpen.value = false;
+  page = page === 'users' ? `${page}/${name}` : page;
+  router.push(`/${page}`);
 }
 
 const logout = async () => {

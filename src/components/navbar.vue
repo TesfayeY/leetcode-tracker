@@ -1,38 +1,40 @@
 <template>
-  <nav>
-    <ul class="flex items-center rounded-full h-16 border-dotted border-2 border-gray-500 justify-between">
-      <li><a class="rounded-full" href="/welcome" @click.prevent="navigate('/welcome')">Home</a></li>
-      <li><a class="rounded-full" href="/settings" @click.prevent="navigate('/settings')">Settings</a></li>
-      <li><a class="rounded-full" href="https://github.com/bioneos/training-project/tree/main" target="_blank">Repo</a></li>
-      <li><a class="rounded-full" v-bind:href="'/users' + displayName" @click.prevent="navigate(`/users/${displayName}`)">Profile</a></li>
-      <li><a class="rounded-full" href="#" @click.prevent="logout">Logout</a></li>
-      <li>
-        <ClientOnly>
-          <UButton block
-                  :icon="isDark ? 'i-heroicons-moon-20-solid' : 'i-heroicons-sun-20-solid'"
-                  variant="ghost"
-                  aria-label="Theme"
-                  @click="isDark = !isDark"
-                  class="theme-button"
-                />
-        </ClientOnly>
-      </li>
-    </ul>
+  <nav class="flex flex-row justify-end mt-5 items-center">
+    <div class="grid grid-cols-2">
+      <ClientOnly>
+        <UButton block
+                :icon="isDark ? 'i-heroicons-moon-20-solid' : 'i-heroicons-sun-20-solid'"
+                variant="ghost"
+                aria-label="Theme"
+                @click="isDark = !isDark"
+                class="theme-button"
+              />
+      </ClientOnly>
+      <UserMenu :name="displayName" class="z-[100]"></UserMenu>
+    </div>
   </nav>
   <UDivider :avatar="{ src: '/img/logo-sq.png' }" />
   <div class ="flex flex-row justify-end">
-          <UserMenu />
-        </div>
+    
+  </div>
 </template>
 
 <script setup>
 import { useRouter } from 'vue-router';
 import { useCookie } from '#app';
-import { computed } from 'vue';
+import { computed, onMounted, defineProps, ref, watch } from 'vue';
 import * as Sentry from "@sentry/nuxt";
 import UserMenu from './UserMenu.vue';
 
 const router = useRouter();
+
+const props = defineProps(['page'])
+const currentPage = ref(props.page);
+const displayName = ref('');
+
+watch(() => props.page, (updatedValue) => {
+  currentPage.value = updatedValue;
+})
 
 const navigate = (path) => {
   router.push(path);
@@ -40,7 +42,7 @@ const navigate = (path) => {
 
 // FIXME: Not sure if my commenting above broke this... Also need to review how to
 //   get to this route as I think it might not be accessible / correct?
-const me = async () => {
+onMounted(async () => {
   const token = useCookie('token').value || "";
   console.log('me: Token:', token); // Log to ensure token is retrieved
 
@@ -49,41 +51,19 @@ const me = async () => {
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ token: token }) 
   }).then((data) => { 
+    displayName.value = useCookie('name').value;
     return data;
   }).catch((error) => {
-  Sentry.captureException(error, {
-    extra: {//give context to generic sentry failure such as seesion issues and token
-      action: 'logout',
-      endpoint: '/api/auth/logout',
-      timestamp: new Date().toISOString(),
-      tokenPresent: Boolean(useCookie('token').value),
-    }
+    Sentry.captureException(error, {
+      extra: {//give context to generic sentry failure such as seesion issues and token
+        action: 'logout',
+        endpoint: '/api/auth/logout',
+        timestamp: new Date().toISOString(),
+        tokenPresent: Boolean(useCookie('token').value),
+      }
+    });
   });
-  });
-};
-const logout = async () => {
-  const response = await $fetch('/api/auth/logout', { 
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-  }).then((data) => {
-    return data;
-  }).catch((error) => {
-  Sentry.captureException(error, {
-    extra: {//provide more information on route and user
-      action: 'logout',
-      endpoint: '/api/auth/logout',
-      time: new Date().toISOString()
-    }
-  });
-});
-
-  if (response && response.success) {
-    console.log('Logout successful');
-    router.push('/login'); // Navigate to login page after logout
-  } else {
-    console.log('Logout failed');
-  }
-};
+})
 
 const colorMode = useColorMode();
 const isDark = computed({
@@ -95,28 +75,4 @@ const isDark = computed({
   }
 });
 
-const displayName = useCookie('name').value;
-
 </script>
-
-<style scoped>
-nav ul {
-  list-style-type: none;
-  padding: 0px;
-  display: flex; 
-  align-items: center; 
-}
-
-nav li {
-  display: flex; 
-  margin-right: 10px;
-  margin-left: 10px;
-  align-items: center; 
-  flex: 1px; 
-}
-
-.theme-button {
-    margin: 0px; 
-    padding: 0px; 
-  }
-</style>
