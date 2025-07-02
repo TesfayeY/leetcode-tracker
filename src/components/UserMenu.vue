@@ -52,20 +52,20 @@
 import { ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
 
-const props = defineProps(['name']);
-const name = ref(props.name);
+const props = defineProps(['username']);
+const name = ref(props.username);
 
 const isOpen = ref(false)
 const router = useRouter()
 const user = { avatarUrl: '/img/avatar.png' } 
 
-watch(() => props.name, (updatedValue) => {
+watch(() => props.username, (updatedValue) => {
   name.value = updatedValue;
 })
 
 function goTo(page) {
   isOpen.value = false;
-  page = page === 'users' ? `${page}/${name}` : page;
+  page = page === 'users' ? `${page}/${name.value}` : page;
   router.push(`/${page}`);
 }
 

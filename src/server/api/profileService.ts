@@ -1,8 +1,31 @@
-import { readBody, parseCookies, H3Event } from 'h3';
+import { readBody, parseCookies, H3Event, getQuery } from 'h3';
 import prisma from '../../database/db';
 import { extractUserIdFromToken } from '../../jwt';
 import graphqlFetch from '../utils/graphqlFetch';
 import readGraphqlFiles from '../utils/graphql-parse';
+
+export async function getLeetcodeProfile(event: H3Event, queryFile: any) {
+  const cookies = parseCookies(event);
+  const extractedUserId = await extractUserIdFromToken(cookies.token);
+  const userId = extractedUserId !== null ? extractedUserId : undefined;
+  const queryParams = getQuery(event);
+
+  const username = queryParams.lcUsername;
+
+  try {
+    const query = readGraphqlFiles(queryFile);
+    const response = await graphqlFetch(query, { username: username });
+
+    if (response.data.matchedUser === null) {
+      throw createError({statusCode: 404, statusMessage: "Leetcode user not found" });
+    }
+
+    return { data: response.data, message: 'Sucessfully retrieve Leetcode profile' };
+
+  } catch(error: any) {
+    throw error;
+  }
+}
 
 export async function addLeetcodeUsername(event: H3Event, queryFile: any) {
   const cookies = parseCookies(event);
@@ -31,11 +54,8 @@ export async function addLeetcodeUsername(event: H3Event, queryFile: any) {
   }
 
   //Check leetcode profile is legitimate
-
-
   try {
     const query = readGraphqlFiles(queryFile);
-
     const response = await graphqlFetch(query, { username: newUserName });
 
     if (response.data.matchedUser === null) {

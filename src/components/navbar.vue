@@ -10,7 +10,7 @@
                 class="theme-button"
               />
       </ClientOnly>
-      <UserMenu :name="displayName" class="z-[100]"></UserMenu>
+      <UserMenu :username="displayName" class="z-[100]"></UserMenu>
     </div>
   </nav>
   <UDivider :avatar="{ src: '/img/logo-sq.png' }" />
@@ -44,7 +44,7 @@ const navigate = (path) => {
 //   get to this route as I think it might not be accessible / correct?
 onMounted(async () => {
   const token = useCookie('token').value || "";
-  console.log('me: Token:', token); // Log to ensure token is retrieved
+  //console.log('me: Token:', token); // Log to ensure token is retrieved
 
   return await $fetch('/api/auth/me', { 
     method: "POST",

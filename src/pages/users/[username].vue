@@ -8,7 +8,7 @@
     <UButton class="p-3 text-lg" @click="openModal('Add Leetcode Username')">Add Leetcode Profile</UButton>
   </div>
   <div v-else class="flex flex-col place-content-evenly h-[60vh] mt-5">
-    <UserCard :lcUsername="lcUsername"></UserCard>
+    <UserCard :lcUsername="lcUsername" :username="username"></UserCard>
   </div>
   <InputModal 
     v-if="isInputModalOpen" 
