@@ -21,7 +21,8 @@
   </nav>
   <UDivider :avatar="{ src: '/img/logo-sq.png' }" />
   <div class ="flex flex-row justify-end">
-          <UserMenu />
+          <UserMenu 
+          :profilePath="`/users/${displayName}`" />
         </div>
 </template>
 

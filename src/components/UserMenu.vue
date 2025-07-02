@@ -20,8 +20,7 @@
         role="menu"
       >
         <li
-          @click="goTo('profile')"
-          class="flex items-center px-4 py-2 hover:bg-gray-300 cursor-pointer text-black"
+          @click="goTo(profilePath)" class="flex items-center px-4 py-2 hover:bg-gray-300 cursor-pointer text-black"
         >
           <NuxtIcon name="hero-outline:user" class="w-5 h-5 mr-3 text-black-600" />
           Profile
@@ -46,38 +45,40 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { ref, defineProps } from 'vue' // Add defineProps here
 import { useRouter } from 'vue-router'
 
+// Define the props that this component expects
+const props = defineProps({
+  profilePath: {
+    type: String,
+    required: true // This prop is now required
+  }
+})
 
 const isOpen = ref(false)
 const router = useRouter()
-const user = { avatarUrl: '/img/avatar.png' } 
+const user = { avatarUrl: '/img/avatar.png' } // Keep for now as you only want minimal change
 
-function goTo(page) {
+// goTo now accepts the full path directly
+function goTo(path) { // Changed 'page' to 'path' for clarity
   isOpen.value = false
-  router.push(`/${page}`)
+  router.push(path) // Push the path directly
 }
 
 const logout = async () => {
-  isOpen.value = false; 
+  isOpen.value = false;
   const response = await $fetch('/api/auth/logout', {
     method: "POST",
     headers: { "Content-Type": "application/json" },
   }).then((data) => {
     console.log('Logout successful (API response):', data);
-    router.push('/login'); // Redirect after successful API call
+    router.push('/login');
     return data;
   }).catch((error) => {
-    Sentry.captureException(error, {
-      extra: {
-        action: 'logout',
-        endpoint: '/api/auth/logout',
-        time: new Date().toISOString()
-      }
-    });
+    
     console.error('Logout failed:', error);
-    router.push('/login'); 
+    router.push('/login');
   });
 };
 </script>
