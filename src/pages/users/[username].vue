@@ -12,6 +12,7 @@
   </div>
   <InputModal 
     v-if="isInputModalOpen" 
+    :errorCode="errorCode"
     :title="modalTitle"
     @close-modal="closeModal" 
     @submit-form="handleInputFormModal"
@@ -21,7 +22,7 @@
 
 <script lang="ts" setup>
 import { useRoute } from 'vue-router';
-import { ref } from 'vue';
+import { ref, onMounted } from 'vue';
 import { useErrorLogger } from '../../composables/useErrorLogger';
 import InputModal from '../../components/inputModal.vue';
 import UserCard from '../../components/userCard.vue';
@@ -29,6 +30,7 @@ import UserCard from '../../components/userCard.vue';
 const { reportError } = useErrorLogger();
 const route = useRoute();
 const username = ref(route.params.username);
+const errorCode = ref('');
 const token = useCookie('token') ;
 const hasLeetcodeProfile = ref(false);
 const isInputModalOpen = ref(false);
@@ -41,34 +43,56 @@ const openModal = (title: string) => {
 }
 
 const closeModal = () => {
+  errorCode.value = '';
   isInputModalOpen.value = false;
   modalTitle.value = '';
 }
 
-// Fetch the account data to check for leetcode username
-try {
-  const response = await $fetch(`/api/user/me`, {
-    method: 'GET',
-    headers: {
-      'Content-Type': 'application/json',
-      'Authorization': `Bearer ${token}`,
-    },
-  })
+onMounted(async () => {
+  // Fetch the account data to check for leetcode username
+  try {
+    const response = await $fetch(`/api/user/me`, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`,
+      },
+    })
 
-  if (response.success) {
-    hasLeetcodeProfile.value = response.data.lcUsername !== "";
-    lcUsername.value = response.data.lcUsername;
+    if (response.success) {
+      hasLeetcodeProfile.value = response.data.lcUsername !== "";
+      lcUsername.value = response.data.lcUsername;
+    }
+
+  } catch(error: any) {
+    reportError(error,{ section : `users/${username.value}`});
   }
+})
 
-} catch(error: any) {
-  reportError(error,{ section : `users/${username.value}`});
-}
+
 
 //Handle value from input modal
-const handleInputFormModal = (modalValue: string) => {
+const handleInputFormModal = async (modalValue: string) => {
   if (modalValue !== "") {
-    lcUsername.value = modalValue;
-    hasLeetcodeProfile.value = true;
+    // Check and Apply to persistent layer
+    try {
+      const data = await $fetch('/api/user/profile', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          lcUsername: modalValue
+        }),
+      });
+
+      lcUsername.value = modalValue;
+      hasLeetcodeProfile.value = true;
+      errorCode.value = '';
+      closeModal();
+
+    } catch (error: any) {
+      reportError(error, { section : `users/${username.value}`}); 
+      errorCode.value = error.statusCode.toString();
+    }
   }
 }
 </script>

@@ -5,6 +5,8 @@
         <UFormGroup class="mt-5">
           <UInput v-model="inputField" type="text"/>
         </UFormGroup>
+        <p v-if="errorCode === '404'" class="font-bold mt-2" style="color: red;">Username does not exist</p>
+        <p v-if="errorCode === '500'" class="font-bold mt-2" style="color: red;">Server error</p>
         <div class="mt-5 flex flex-end gap-4">
           <UButton v-bind:disabled="inputField === ''" class="p-2 px-3 text-md" type="submit" @click="sendFormToParent">Submit</UButton>
           <UButton class="p-2 px-3 text-md" @click="closeModal">Close</UButton>
@@ -14,27 +16,32 @@
 </template>
 
 <script setup lang="ts">
-import { ref, defineProps, onMounted, onUnmounted } from 'vue';
+import { ref, defineProps, onMounted, watch } from 'vue';
 
-const props = defineProps(['title']);
+const props = defineProps(['title', 'errorCode']);
 
 const inputField = ref('');
 const modalTitle = ref('');
+const errorCode = ref('');
 const emit = defineEmits(['submit-form', 'close-modal']);
 
 onMounted(() => {
   modalTitle.value = props.title;
+  errorCode.value = props.errorCode;
 })
 
 // These function will emit the control and value back to the parent 
 const sendFormToParent = () => {
   emit('submit-form', inputField.value);
-  emit('close-modal');
 }
 
 const closeModal = () => {
   emit('close-modal')
 }
+
+watch(() => props.errorCode, (updateValue: boolean) => {
+  errorCode.value = updateValue
+});
 
 </script>
 
