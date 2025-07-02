@@ -21,7 +21,20 @@ model User {
   lc_username String @unique @db.VarChar(240) @default("")
   inboxSender    Inbox[] @relation("sender")
   inboxrecipient Inbox[] @relation("recipient")
+  // New: to define the relation to the group
+  groups      Group[] // A user can belong to many groups
 }
+
+
+model Group {
+ id            Int     @id @default(autoincrement())
+ uniqueGroupId String  @unique @default(cuid())
+ groupName     String
+ numberOfUsers Int     @default(0) // default to 0 for new groups
+ isActive      Boolean @default(true) // default to true for new groups
+ users         User[] // A group can have many users
+}
+
 
 model Inbox {
   id            Int     @id @default(autoincrement())   
