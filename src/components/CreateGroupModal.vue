@@ -18,16 +18,18 @@ async function createGroup() {
   isSubmitting.value = true
 
   try {
-    // ← replace this with your real API call
-    // e.g. const res = await $fetch('/api/groups', { method: 'POST', body: { name: groupName.value }})
-    //      const newId = res.id
-    const fakeId = Math.random().toString(36).substring(2, 10)
-    await new Promise(r => setTimeout(r, 500))    // simulate network
+    // Nuxt's $fetch wrapper around ofetch, which provides convenient defaults for API calls within Nuxt app
+    const newGroup = await $fetch('/api/groups', { 
+      method: 'POST',
+      body: { groupName: groupName.value }, 
+    });
 
-    router.push(`/groups/${fakeId}`)
-    emit('close')
+    const newId = newGroup.uniqueGroupId; // Use the uniqueGroupId from the database
+
+    router.push(`/groups/${newId}`); //use actual ID from the DB
+    emit('close');
   } catch (e: any) {
-    console.error(e)
+    console.error('Frontend error:', e);
     error.value = e.statusMessage || 'Could not create group. Please try again.'
   } finally {
     isSubmitting.value = false
