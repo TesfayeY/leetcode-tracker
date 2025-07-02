@@ -19,4 +19,24 @@ model User {
   email    String  @unique @db.VarChar(320)
   password String
   lc_username String @unique @db.VarChar(240) @default("")
+  inboxSender    Inbox[] @relation("sender")
+  inboxrecipient Inbox[] @relation("recipient")
+}
+
+model Inbox {
+  id            Int     @id @default(autoincrement())   
+  sender        User    @relation("sender", fields: [senderId], references: [id])
+  senderId      Int 
+  recipient     User    @relation("recipient", fields: [recipientId], references: [id])
+  recipientId   Int
+  context       String
+  isInvitation  Boolean
+  acknowledgement Acknowledgement @default(RECEIVED)
+}
+
+enum Acknowledgement {
+  ACCEPT
+  DENY
+  VIEWED
+  RECEIVED
 }
