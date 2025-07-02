@@ -9,4 +9,5 @@ npx prisma migrate dev
 # Start the application
 npm run dev
 
+#tail -f /dev/null
 
