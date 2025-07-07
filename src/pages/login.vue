@@ -87,7 +87,7 @@ const login = async () => {
       useCookie('id').value = data.id.toString();
 
       console.log('Redirecting to /welcome');
-      router.push("/welcome");
+      router.push("/welcome").then(() => reloadNuxtApp({ path: 'welcome', force: true }))
     } 
   } catch (error: any) {
     loginError.value = error.statusMessage;

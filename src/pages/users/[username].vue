@@ -1,6 +1,6 @@
 <template>
   <div class="grid grid-rows-20">
-    <div class="flex flex-row justify-start gap-5 h-[5vh] row-span-1">
+    <div class="flex flex-row justify-start gap-5 h-[5vh] row-span-1 items-center">
       <UButton class="p-2 px-3 text-md h-full" to="/welcome">Return</UButton>
       <UButton v-if="hasLeetcodeProfile" class="p-2 px-3 text-md h-full" @click="openModal('Change Leetcode Username')">Change Profile</UButton>
     </div>

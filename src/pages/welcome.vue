@@ -29,7 +29,7 @@
 
 <script setup lang="ts">
 import { useRouter } from 'vue-router'
-import { ref } from 'vue';
+import { ref, onMounted } from 'vue';
 // Import your modal components
 import JoinGroupModal from '~/components/JoinGroupModal.vue';
 import CreateGroupModal from '~/components/CreateGroupModal.vue';
