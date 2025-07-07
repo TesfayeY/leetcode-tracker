@@ -1,15 +1,18 @@
 <template>
-  <div class="flex flex-row justify-start gap-5">
-    <UButton class="p-2 px-3 text-md" to="/welcome">Return</UButton>
-    <UButton v-if="hasLeetcodeProfile" class="p-2 px-3 text-md" @click="openModal('Change Leetcode Username')">Change Profile</UButton>
+  <div class="grid grid-rows-20">
+    <div class="flex flex-row justify-start gap-5 h-[5vh] row-span-1">
+      <UButton class="p-2 px-3 text-md h-full" to="/welcome">Return</UButton>
+      <UButton v-if="hasLeetcodeProfile" class="p-2 px-3 text-md h-full" @click="openModal('Change Leetcode Username')">Change Profile</UButton>
+    </div>
+    <div v-if="!hasLeetcodeProfile" class="row-span-19 flex flex-col place-content-evenly h-[60vh] mt-5">
+      <p class="text-center text-3xl">There is no profile to display</p>
+      <UButton class="p-3 text-lg" @click="openModal('Add Leetcode Username')">Add Leetcode Profile</UButton>
+    </div>
+    <div v-else class="flex flex-col place-content-evenly h-[60vh] mt-5">
+      <UserCard :lcUsername="lcUsername" :username="username"></UserCard>
+    </div>
   </div>
-  <div v-if="!hasLeetcodeProfile" class="flex flex-col place-content-evenly h-[60vh] mt-5">
-    <p class="text-center text-3xl">There is no profile to display</p>
-    <UButton class="p-3 text-lg" @click="openModal('Add Leetcode Username')">Add Leetcode Profile</UButton>
-  </div>
-  <div v-else class="flex flex-col place-content-evenly h-[60vh] mt-5">
-    <UserCard :lcUsername="lcUsername" :username="username"></UserCard>
-  </div>
+  
   <InputModal 
     v-if="isInputModalOpen" 
     :errorCode="errorCode"
