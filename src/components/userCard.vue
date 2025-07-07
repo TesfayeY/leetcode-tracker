@@ -1,10 +1,11 @@
 <template>
-  <UCard>
+  <Loading :isLoading="isLoadingState"></Loading>
+  <UCard v-if="isLoadingState === false">
     <template #header>
       <p class="text-left text-3xl">Leetcode Profile</p>
     </template>
     <div class="h-[500px] grid grid-cols-3">
-      <div class="bg-gray-100 col-span-1 justify-center grid grid-rows-2 rounded-l-md">
+      <div class="bg-gray-200 col-span-1 justify-center grid grid-rows-2 rounded-l-md">
         <div class="flex items-center justify-center">
           <img
             :src="toRaw(userData.value.matchedUser.profile.userAvatar)"
@@ -13,7 +14,7 @@
         ></img>
         </div>
         <div class="flex items-start flex-col">
-          <p class="text-black text-2xl text-center">{{ toRaw(userData.value.matchedUser.username) }}</p>
+          <p class="text-black text-2xl text-center font-bold">{{ toRaw(userData.value.matchedUser.username) }}</p>
           <p class="text-black text-2xl text-center">Problem solved: {{ toRaw(userData.value.matchedUser.submitStats.totalSubmissionNum[0].count) }}</p>
           <p class="text-black text-2xl text-center">Ranking: {{ toRaw(userData.value.matchedUser.profile.ranking) }}</p>
         </div>
@@ -62,9 +63,13 @@
               }"
             ></div>
           </div>
-          <div class="grid grid-rows-4 place-content-center">
-            <p class="text-black text-2xl mt-5">Top Languages</p>
-
+          <div class="flex flex-col justify-center items-start ml-5">
+            <p class="text-black text-2xl font-bold">Top Languages</p>
+            <p v-for="i in NUM_LANGUAGE_DISPLAY" class="text-black text-2xl">
+              {{ toRaw(userData.value.matchedUser.languageProblemsCount[i - 1].languageName) }}
+              :
+              {{ toRaw(userData.value.matchedUser.languageProblemsCount[i - 1].problemsSolved) }}
+            </p>
           </div>    
         </div>
         <div class="bg-blue-100 row-span-2">
@@ -76,22 +81,26 @@
 </template>
 
 <script setup lang="ts">
+import { NUM_LANGUAGE_DISPLAY } from '../constants/appConst';
 import { ref, reactive, defineProps, watch, onMounted, toRaw } from 'vue';
 import { useErrorLogger } from '../composables/useErrorLogger';
 
 const { reportError } = useErrorLogger();
 const props = defineProps(['lcUsername', 'username']);
-const token = useCookie('token') ;
+const token = useCookie('token');
 const lcUsername = ref(props.lcUsername);
 const username = ref(props.username);
+const isLoadingState = ref(true);
+
 const userData = reactive({
   matchedUser: {},
-  recentSubmissionList: []
+  recentSubmissionList: [],
+  langCount: []
 });
 
 const problemData = reactive({
   allQuestionsCount: []
-})
+});
 
 onMounted(async () => {
   // Fetch the leetcode user if username available
@@ -106,6 +115,7 @@ onMounted(async () => {
 
     if (response.data) {
       userData.value = response.data;
+      //console.log(toRaw(userData.value));
     }
 
   } catch (error: any ) {
@@ -129,11 +139,14 @@ onMounted(async () => {
   } catch (error: any) {
     reportError(error, { section : `users/${username.value}`});
   }
+
+  isLoadingState.value = false;
 })
 
 // This will watch for the props update in parent to pass back to children
 watch(() => props.lcUsername, async (updateValue: string) => {
-  lcUsername.value = updateValue
+  lcUsername.value = updateValue;
+  isLoadingState.value = true;
 
   try {
     const response = await $fetch(`/api/user/profile?lcUsername=${lcUsername.value}`, {
@@ -142,18 +155,17 @@ watch(() => props.lcUsername, async (updateValue: string) => {
         'Content-Type': 'application/json',
         'Authorization': `Bearer ${token}`,
       },
-    })
+    });
 
     if (response.data) {
       userData.value = response.data;
-      console.log(userData.value)
     }
   } catch (error: any ) {
     reportError(error, { section : `users/${username.value}`});
   }
+
+  isLoadingState.value = false;
 });
-
-
 
 </script>
 

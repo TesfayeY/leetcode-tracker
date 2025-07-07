@@ -1,0 +1,1 @@
+export const NUM_LANGUAGE_DISPLAY: number = 3;
