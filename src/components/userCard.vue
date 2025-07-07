@@ -21,49 +21,49 @@
       <div class="col-span-2 rounded-r-md grid grid-rows-5">
         <div class="bg-green-100 grid grid-cols-4 row-span-3">
           <div class="flex flex-col justify-start items-center">
-            <p class="text-black text-center text-2xl font-bold mt-5">Easy</p>
+            <p class="text-black text-center text-2xl font-bold mt-5">{{ toRaw(problemData.value.allQuestionsCount[1].difficulty) }}</p>
             <div 
               class="mt-5"
               role="progress-circle" 
               :style="{ 
                 '--size': '180px', 
                 '--value': toRaw(userData.value.matchedUser.submitStats.totalSubmissionNum[1].count),
-                '--total': '3600',
+                '--total': toRaw(problemData.value.allQuestionsCount[1].count),
                 '--primary': 'green',
                 '--secondary': 'rgb(142, 240, 112)'
               }"
             ></div>
           </div>
           <div class="flex flex-col justify-start items-center">
-            <p class="text-black text-center text-2xl font-bold mt-5">Medium</p>
+            <p class="text-black text-center text-2xl font-bold mt-5">{{ toRaw(problemData.value.allQuestionsCount[2].difficulty) }}</p>
             <div 
               class="mt-5"
               role="progress-circle" 
               :style="{
                 '--size': '180px',
                 '--value': toRaw(userData.value.matchedUser.submitStats.totalSubmissionNum[2].count),
-                '--total': '3600',
+                '--total': toRaw(problemData.value.allQuestionsCount[2].count),
                 '--primary': 'orange',
                 '--secondary': 'rgb(231, 189, 140)'
             }"
           ></div>
           </div>  
           <div class="flex flex-col justify-start items-center">
-            <p class="text-black text-center text-2xl font-bold mt-5">Hard</p>
+            <p class="text-black text-center text-2xl font-bold mt-5">{{ toRaw(problemData.value.allQuestionsCount[3].difficulty) }}</p>
             <div 
               class="mt-5"
               role="progress-circle" 
               :style="{
                 '--size': '180px', 
                 '--value': toRaw(userData.value.matchedUser.submitStats.totalSubmissionNum[3].count),
-                '--total': '3600',
+                '--total': toRaw(problemData.value.allQuestionsCount[3].count),
                 '--primary': 'red',
                 '--secondary': 'rgb(240, 112, 112)'
               }"
             ></div>
           </div>
           <div class="grid grid-rows-4 place-content-center">
-            <p class="text-black text-2xl mt-5">Languages</p>
+            <p class="text-black text-2xl mt-5">Top Languages</p>
 
           </div>    
         </div>
@@ -89,22 +89,44 @@ const userData = reactive({
   recentSubmissionList: []
 });
 
+const problemData = reactive({
+  allQuestionsCount: []
+})
+
 onMounted(async () => {
+  // Fetch the leetcode user if username available
   try {
-    // Fetch the leetcode user if username available
     const response = await $fetch(`/api/user/profile?lcUsername=${lcUsername.value}`, {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',
         'Authorization': `Bearer ${token}`,
       },
-    })
+    });
 
     if (response.data) {
       userData.value = response.data;
-      console.log(toRaw(userData.value.matchedUser.submitStats.totalSubmissionNum[1].count))
     }
+
   } catch (error: any ) {
+    reportError(error, { section : `users/${username.value}`});
+  }
+
+  // Fetch all current problem counts
+  try {
+    const response = await $fetch(`/api/problem`, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`,
+      },
+    });
+
+    if (response.data) {
+      problemData.value = response.data;
+    }
+
+  } catch (error: any) {
     reportError(error, { section : `users/${username.value}`});
   }
 })

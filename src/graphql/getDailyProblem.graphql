@@ -1,0 +1,23 @@
+query {
+  activeDailyCodingChallengeQuestion {
+    date
+    userStatus
+    link
+    question {
+      titleSlug
+      title
+      translatedTitle
+      acRate
+      difficulty
+      freqBar
+      questionFrontendId
+      isPaidOnly
+      status
+      hasSolution
+      topicTags {
+          name
+          slug
+      }
+    }
+  }
+}

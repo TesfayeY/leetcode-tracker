@@ -1,0 +1,6 @@
+query getAllProblemsCount {
+    allQuestionsCount {
+        difficulty
+        count
+    }
+}
