@@ -10,6 +10,7 @@ export default defineEventHandler(async (event) => {
 
   let leetcodeProfile = {};
   let languageProfile = [];
+  let submissionProfile = {};
   
   await getLeetcodeProfile(event, 'getUserProfile').then((response) => {
     leetcodeProfile = response.data;
@@ -17,11 +18,16 @@ export default defineEventHandler(async (event) => {
 
   await getLeetcodeProfile(event, 'getUserLangProblemsCount').then((response) => {
     languageProfile = response.data.matchedUser.languageProblemCount;
-  })
+  });
+
+  await getLeetcodeProfile(event, 'getUserActiveDays').then((response) => {
+    submissionProfile = response.data.matchedUser.userCalendar;
+  });
 
   // Sort the language in descending order on # of problems solved
   languageProfile.sort((first, second) => second.problemsSolved - first.problemsSolved);
   leetcodeProfile.matchedUser.languageProblemsCount = languageProfile;
+  leetcodeProfile.matchedUser.userCalendar = submissionProfile;
   
   return { data: leetcodeProfile, message: "Successfully retrieve user profile"}
 });

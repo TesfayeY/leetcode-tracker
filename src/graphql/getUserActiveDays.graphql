@@ -1,6 +1,6 @@
-query ($username: String!) {
+query ($username: String!, $year: Int!) {
     matchedUser(username: $username) {
-        userCalendar {
+        userCalendar(year: $year) {
             activeYears
             streak
             submissionCalendar
@@ -11,5 +11,6 @@ query ($username: String!) {
 
 # Variable
 # {
-#     "username": string
+#     "username": string,
+#     "year": int
 # }

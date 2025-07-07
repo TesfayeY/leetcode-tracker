@@ -2,7 +2,11 @@
   <Loading :isLoading="isLoadingState"></Loading>
   <UCard v-if="isLoadingState === false">
     <template #header>
-      <p class="text-left text-3xl">Leetcode Profile</p>
+      <div class="flex flex-row justify-start gap-4">
+        <p class="text-left text-3xl">Leetcode Profile {{ viewYear }}</p>
+        <UButton @click="handleYearChange('back')">Previous year</UButton>
+        <UButton @click="handleYearChange('next')">Next Year</UButton>
+      </div>
     </template>
     <div class="h-[500px] grid grid-cols-3">
       <div class="bg-gray-200 col-span-1 justify-center grid grid-rows-2 rounded-l-md">
@@ -63,7 +67,7 @@
               }"
             ></div>
           </div>
-          <div class="flex flex-col justify-center items-start ml-5">
+          <div class="flex flex-col justify-center ml-5">
             <p class="text-black text-2xl font-bold">Top Languages</p>
             <p v-for="i in NUM_LANGUAGE_DISPLAY" class="text-black text-2xl">
               {{ toRaw(userData.value.matchedUser.languageProblemsCount[i - 1].languageName) }}
@@ -72,8 +76,12 @@
             </p>
           </div>    
         </div>
-        <div class="bg-blue-100 row-span-2">
-
+        <div class="bg-blue-100 row-span-2 h-full">
+          <Calendar 
+            :submissionDates="toRaw(userData.value.matchedUser.userCalendar.submissionCalendar)"
+            :activeYears="toRaw(userData.value.matchedUser.userCalendar.activeYears)"
+            :currentYear="viewYear"
+          ></Calendar>
         </div>
       </div>
     </div>
@@ -91,11 +99,13 @@ const token = useCookie('token');
 const lcUsername = ref(props.lcUsername);
 const username = ref(props.username);
 const isLoadingState = ref(true);
+const viewYear = ref(new Date().getFullYear());
 
 const userData = reactive({
   matchedUser: {},
   recentSubmissionList: [],
-  langCount: []
+  langCount: [],
+  userCalendar: {}
 });
 
 const problemData = reactive({
@@ -104,23 +114,7 @@ const problemData = reactive({
 
 onMounted(async () => {
   // Fetch the leetcode user if username available
-  try {
-    const response = await $fetch(`/api/user/profile?lcUsername=${lcUsername.value}`, {
-      method: 'GET',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${token}`,
-      },
-    });
-
-    if (response.data) {
-      userData.value = response.data;
-      //console.log(toRaw(userData.value));
-    }
-
-  } catch (error: any ) {
-    reportError(error, { section : `users/${username.value}`});
-  }
+  await fetchUserProfile()
 
   // Fetch all current problem counts
   try {
@@ -147,9 +141,19 @@ onMounted(async () => {
 watch(() => props.lcUsername, async (updateValue: string) => {
   lcUsername.value = updateValue;
   isLoadingState.value = true;
+  await fetchUserProfile();
+  isLoadingState.value = false;
+});
 
+const handleYearChange = async (type: string) => {
+  viewYear.value = type === 'back' ? viewYear.value - 1 : viewYear.value === new Date().getFullYear() ? viewYear.value : viewYear.value + 1;
+
+  await fetchUserProfile();
+}
+
+async function fetchUserProfile() {
   try {
-    const response = await $fetch(`/api/user/profile?lcUsername=${lcUsername.value}`, {
+    const response = await $fetch(`/api/user/profile?lcUsername=${lcUsername.value}&year=${viewYear.value}`, {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',
@@ -163,10 +167,7 @@ watch(() => props.lcUsername, async (updateValue: string) => {
   } catch (error: any ) {
     reportError(error, { section : `users/${username.value}`});
   }
-
-  isLoadingState.value = false;
-});
-
+}
 </script>
 
 <style scoped>
@@ -190,7 +191,7 @@ div[role=progress-circle]::before {
   left: 0;
   width: 100%;
   height: 100%;
-  background:conic-gradient(var(--primary) calc(var(--value) * 1%), var(--secondary) 0);
+  background:conic-gradient(var(--primary) calc((var(--value) / var(--total) * 100) * 1%), var(--secondary) 0);
   mask: radial-gradient(white 55%, transparent 0);
   mask-mode: alpha;
   -webkit-mask: radial-gradient(#0000 55%, #000 0);

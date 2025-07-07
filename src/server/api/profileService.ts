@@ -4,17 +4,19 @@ import { extractUserIdFromToken } from '../../jwt';
 import graphqlFetch from '../utils/graphqlFetch';
 import readGraphqlFiles from '../utils/graphql-parse';
 
-export async function getLeetcodeProfile(event: H3Event, queryFile: any) {
+export async function getLeetcodeProfile(event: H3Event, queryFile: string) {
   const cookies = parseCookies(event);
   const extractedUserId = await extractUserIdFromToken(cookies.token);
   const userId = extractedUserId !== null ? extractedUserId : undefined;
   const queryParams = getQuery(event);
 
   const username = queryParams.lcUsername;
+  const year = queryParams.year;
 
   try {
     const query = readGraphqlFiles(queryFile);
-    const response = await graphqlFetch(query, { username: username });
+    let variables = queryFile.includes("ActiveDays") ? { username: username, year: year } : { username: username };
+    const response = await graphqlFetch(query, variables);
 
     if (response.data.matchedUser === null) {
       throw createError({statusCode: 404, statusMessage: "Leetcode user not found" });
