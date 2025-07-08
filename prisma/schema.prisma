@@ -19,6 +19,7 @@ model User {
   email    String  @unique @db.VarChar(320)
   password String
   lc_username String @db.VarChar(240) @default("")
+  userAvatar      String? 
   inboxSender    Inbox[] @relation("sender")
   inboxrecipient Inbox[] @relation("recipient")
   // New: to define the relation to the group
