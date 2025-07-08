@@ -10,14 +10,10 @@
                 class="theme-button"
               />
       </ClientOnly>
-      <UserMenu :username="displayName" class="z-[100]"></UserMenu>
+      <UserMenu :profilePath="`/users/${displayName}`" class="z-[100]"></UserMenu>
     </div>
   </nav>
   <UDivider :avatar="{ src: '/img/logo-sq.png' }" />
-  <div class ="flex flex-row justify-end">
-          <UserMenu 
-          :profilePath="`/users/${displayName}`" />
-        </div>
 </template>
 
 <script setup>
