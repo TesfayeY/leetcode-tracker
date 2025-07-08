@@ -1,5 +1,5 @@
 import prisma from '../../database/db';
-import { parseCookies, H3Event, getQuery } from 'h3';
+import { parseCookies, H3Event, getQuery, readBody, createError } from 'h3';
 import { extractUserIdFromToken } from '../../jwt';
 
 export async function getUserInboxMessages(event: H3Event) {
@@ -24,6 +24,53 @@ export async function getUserInboxMessages(event: H3Event) {
     });
 
     return { data: allUserInbox, message: 'Sucessfully retrieve user inbox' };
+
+  } catch(error: any) {
+    throw error;
+  }
+}
+
+export async function updateUserInbox(event: H3Event) {
+  const cookies = parseCookies(event);
+  const extractedUserId = await extractUserIdFromToken(cookies.token);
+  const userId = extractedUserId !== null ? extractedUserId : undefined;
+  const queryParams = getQuery(event);
+
+  const inboxId = parseInt(queryParams.inboxId.toString());
+  const body = await readBody(event);
+
+  try {
+    const inbox = await prisma.inbox.findUnique({
+        where: { id: inboxId },
+    });
+
+    if (!inbox) {
+      throw createError({ statusCode: 404, message: 'Message not found' })
+    }
+
+    await prisma.inbox.update({
+      where: { id: inboxId },
+      data: { 
+        acknowledgement: body.acknowledgement
+      }
+    });
+
+    const allUserInbox = await prisma.inbox.findMany({
+      where: {
+        recipientId: {
+          equals: userId
+        }
+      },
+      include: {
+        sender: {
+          select: {
+            name: true
+          }
+        }
+      }
+    });
+
+    return { data: allUserInbox, message: 'Sucessfully update user inbox' };
 
   } catch(error: any) {
     throw error;

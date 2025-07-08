@@ -78,18 +78,23 @@ const actionItems = (row: any) => [
     icon: 'i-heroicons-check-20-solid',
     click: () => handleAcceptInvitation(row),
     disabled: !row.isInvitation
-  }, 
+  },
+  {
+    label: 'Mark as Read',
+    icon: 'i-heroicons-eye-20-solid',
+    click: () => handleReadInbox(row),
+    disabled: row.acknowledgement === 'VIEWED'
+  },  
   {
     label: 'Archive',
     icon: 'i-heroicons-archive-box-20-solid',
     click: () => handleArchiveInbox(row),
-    disabled: !row.isInvitation
+    disabled: row.acknowledgement === 'ARCHIVED'
   }, 
   {
     label: 'Delete',
     icon: 'i-heroicons-trash-20-solid',
-    click: () => handleADeleteInbox(row),
-    disabled: !row.isInvitation
+    click: () => handleADeleteInbox(row)
   }]
 ];
 
@@ -119,23 +124,35 @@ const handleAcceptInvitation = (inbox: any) => {
   console.log(inbox);
 }
 
+const handleReadInbox = async (inbox: any) => {
+  const requestBody = {
+    acknowledgement: 'VIEWED'
+  }
+  await fetchUserInbox('POST', inbox, requestBody);
+}
+
 const handleArchiveInbox = (inbox: any) => {
   console.log(inbox);
 }
 
 const handleADeleteInbox = async (inbox: any) => {
+  await fetchUserInbox('DELETE', inbox);
+}
+
+async function fetchUserInbox(method: 'POST' | 'GET' | 'PUT' | 'DELETE', inbox: any, body: any = {}) {
   try {
     const response = await $fetch(`api/inbox?inboxId=${inbox.id}`, {
-      method: 'DELETE',
+      method: method,
       headers: {
         'Content-Type': 'application/json',
         'Authorization': `Bearer ${token}`,
       },
+      body: body
     });
 
     if (response === null) {
-        throw createError({ statusCode: 400, message: 'Bad request' });
-      }
+      throw createError({ statusCode: 400, message: 'Bad request' });
+    }
 
     inboxes.value = response.data;
   }
