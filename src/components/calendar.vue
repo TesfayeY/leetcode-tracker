@@ -1,47 +1,47 @@
 <template>
   <Loading :isLoading="isLoadingCalendarData" :style="'text-black'"></Loading>
-  <div v-if="isLoadingCalendarData === false" class="grid grid-rows-4">
-    <div class="bg-red-100 row-span-1 h-12 grid grid-cols-12">
-      <div class="bg-gray-100 place-content-center">
+  <div v-if="isLoadingCalendarData === false" class="grid grid-rows-4 w-full h-full m-0">
+    <div class="row-span-1 grid grid-cols-12 w-full h-full m-0">
+      <div class="bg-gray-100 place-content-center w-full h-full m-0">
         <p class="text-black text-bold text-center text-2xl">Jan</p>
       </div>
-      <div class="bg-gray-200 place-content-center">
+      <div class="bg-gray-200 place-content-center w-full h-full m-0">
         <p class="text-black text-bold text-center text-2xl">Feb</p>
       </div>
-      <div class="bg-gray-300 place-content-center">
+      <div class="bg-gray-300 place-content-center w-full h-full m-0">
         <p class="text-black text-bold text-center text-2xl">Mar</p>
       </div>
-      <div class="bg-gray-400 place-content-center">
+      <div class="bg-gray-400 place-content-center w-full h-full m-0">
         <p class="text-black text-bold text-center text-2xl">Apr</p>
       </div>
-      <div class="bg-gray-500 place-content-center">
+      <div class="bg-gray-500 place-content-center w-full h-full m-0">
         <p class="text-black text-bold text-center text-2xl">May</p>
       </div>
-      <div class="bg-gray-600 place-content-center">
+      <div class="bg-gray-600 place-content-center w-full h-full m-0">
         <p class="text-black text-bold text-center text-2xl">Jun</p>
       </div>
-      <div class="bg-gray-100 place-content-center">
+      <div class="bg-gray-100 place-content-center w-full h-full m-0">
         <p class="text-black text-bold text-center text-2xl">Jul</p>
       </div>
-      <div class="bg-gray-200 place-content-center">
+      <div class="bg-gray-200 place-content-center w-full h-full m-0">
         <p class="text-black text-bold text-center text-2xl">Aug</p>
       </div>
-      <div class="bg-gray-300 place-content-center">
+      <div class="bg-gray-300 place-content-center w-full h-full m-0">
         <p class="text-black text-bold text-center text-2xl">Sep</p>
       </div>
-      <div class="bg-gray-400 place-content-center">
+      <div class="bg-gray-400 place-content-center w-full h-full m-0">
         <p class="text-black text-bold text-center text-2xl">Oct</p>
       </div>
-      <div class="bg-gray-500 place-content-center">
+      <div class="bg-gray-500 place-content-center w-full h-full m-0">
         <p class="text-black text-bold text-center text-2xl">Nov</p>
       </div>
-      <div class="bg-gray-600 place-content-center">
+      <div class="bg-gray-600 place-content-center w-full h-full m-0">
         <p class="text-black text-bold text-center text-2xl">Dec</p>
       </div>
     </div>
-    <div class="bg-yellow-100 row-span-3 h-36 grid grid-cols-12">
-      <div v-for="(month, monthIndex) in months" class="bg-yellow-100 grid grid-cols-6">
-        <div v-for="(week, weekIndex) in weeks" class="grid grid-rows-7">
+    <div class=" row-span-3 grid grid-cols-12 w-full h-full m-0">
+      <div v-for="(month, monthIndex) in months" class="grid grid-cols-6 col-span-1 w-full h-full m-0">
+        <div v-for="(week, weekIndex) in weeks" class="grid grid-rows-7 w-full h-full m-0">
           <div v-for="(day, dayIndex) in days" :class="getStyles(dayIndex, weekIndex, monthIndex)">
           </div>
         </div>
@@ -100,13 +100,15 @@ watch(() => props.submissionDates, (updateValue: any) => {
 
 // This assign the style to individual square that represent day and submissions
 function getStyles(dayIndex: number, weekIndex: number, monthIndex: number) {
+  let otherStyles = ' border-[1px] border-gray-100 w-full h-full m-0';
+
   if (toRaw(displayDates.value).length === 0) {
-    return `bg-green-200`;
+    return `bg-green-200` + otherStyles;
   } else {
     let date = toRaw(displayDates.value)[monthIndex][weekIndex][dayIndex];
 
     if (date === null) {
-      return `bg-gray-100`;
+      return `bg-gray-100` + otherStyles;
     }
 
     let submissions = toRaw(displayDates.value)[monthIndex][weekIndex][dayIndex].submissions;
@@ -115,9 +117,7 @@ function getStyles(dayIndex: number, weekIndex: number, monthIndex: number) {
     : submissions >= 10 && submissions < 20 ? `bg-green-400` 
     : submissions >= 20 ? `bg-green-500`: `bg-green-200`;
 
-    let otherStyles = 'border-[1px] border-gray-100';
-
-    return bgColor + ' ' + otherStyles;
+    return bgColor + otherStyles;
   }
 }
 

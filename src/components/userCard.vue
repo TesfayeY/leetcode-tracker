@@ -31,8 +31,8 @@
           <p class="text-black text-2xl text-center">Total active days: {{ toRaw(userData.value.matchedUser.userCalendar.totalActiveDays) }}</p>
         </div>
       </div>
-      <div class="col-span-2 rounded-r-md grid grid-rows-5">
-        <div class="bg-green-100 grid grid-cols-4 row-span-3">
+      <div class="col-span-2 rounded-r-md grid grid-rows-5 h-full w-full m-0">
+        <div class="bg-green-100 grid grid-cols-4 row-span-3 h-full w-full m-0 rounded-tr-lg">
           <div class="flex flex-col justify-start items-center">
             <p class="text-black text-center text-2xl font-bold mt-5">{{ toRaw(problemData.value.allQuestionsCount[1].difficulty) }}</p>
             <div 
@@ -84,7 +84,7 @@
             </p>
           </div>    
         </div>
-        <div class="bg-blue-100 row-span-2 h-full place-content-center">
+        <div class="bg-gray-100 row-span-2 w-full h-full m-0 place-content-center">
           <Calendar
             :submissionDates="toRaw(userData.value.matchedUser.userCalendar.submissionCalendar)"
             :currentYear="viewYear"

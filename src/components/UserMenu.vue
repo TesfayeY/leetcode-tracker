@@ -20,18 +20,19 @@
         role="menu"
       >
         <UButton
-          @click="goTo(profilePath)" class="flex items-center px-4 py-2 hover:bg-gray-300 cursor-pointer text-black"
+          @click="goTo('/welcome')"
+          class="flex items-center w-full text-lg justify-center hover:bg-gray-300 cursor-pointer text-black"
         >
           Home
         </UButton>
         <UButton
-          @click="goTo('users')"
+          @click="goTo(profilePath)" 
           class="flex mt-2 items-center w-full text-lg justify-center hover:bg-gray-300 cursor-pointer text-black"
         >
           Profile
         </UButton>
         <UButton
-          @click="goTo('settings')"
+          @click="goTo('/settings')"
           class="flex mt-2 items-center w-full text-lg justify-center hover:bg-gray-300 cursor-pointer text-black"
         >
           Settings
