@@ -4,8 +4,8 @@
       <div class="flex items-center rounded-full border-dotted border-2 border-gray-500 justify-between py-2 px-6 md:flex-1">
       <Logo />
             <nav class="hidden md:flex md:space-x-4 lg:space-x-6">
-                <nuxt-link to="/register">Register</nuxt-link>
-                <nuxt-link to="/login">Login</nuxt-link>
+                <nuxt-link to="/register" external>Register</nuxt-link>
+                <nuxt-link to="/login" external>Login</nuxt-link>
                 <div class="flex items-center justify-end flex-shrink-0 space-x-2">
                   <ClientOnly>
                     <UButton block

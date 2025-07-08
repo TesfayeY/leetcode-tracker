@@ -2,7 +2,7 @@ services:
   app:
     build:
       context: .
-      dockerfile: ./src/docker/Dockerfile
+      dockerfile: ./docker/Dockerfile
     ports:
       - "127.0.0.1:${APP_PORT}:${APP_PORT}"
     volumes:
@@ -10,10 +10,10 @@ services:
         source: .
         target: /app
       - type: volume
-        source: trainingproject-node-modules
+        source: leetcode-tracker-node-modules
         target: /app/node_modules
       - type: volume
-        source: trainingproject-nuxt
+        source: leetcode-tracker-nuxt
         target: /app/.nuxt
     depends_on:
       db:
@@ -26,7 +26,7 @@ services:
 
   db:
     build:
-      context: src
+      context: .
       dockerfile: ./docker/Dockerfile.db
     ports:
       - "127.0.0.1:${DB_PORT}:${DB_PORT}"
@@ -42,5 +42,5 @@ services:
       retries: 3
 
 volumes:
-  trainingproject-node-modules:
-  trainingproject-nuxt:
+  leetcode-tracker-node-modules:
+  leetcode-tracker-nuxt:
