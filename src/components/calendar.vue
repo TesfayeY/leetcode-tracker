@@ -64,18 +64,20 @@ const currentYear = ref(props.currentYear)
 let activeDates = Object.keys(toRaw(submissionDates.value)).map((key) => ({
   activeDate: new Date(parseInt(key) * 1000),
   submissions: toRaw(submissionDates.value[key]),
-}))
+}));
 
-const currentYearDates = ref(activeDates.filter(date => date.activeDate.getFullYear() === currentYear.value))
+const currentYearDates = ref(activeDates.filter(date => date.activeDate.getFullYear() === currentYear.value));
 const startDate = ref(new Date(currentYear.value, 0));
 const endDate = ref(new Date(currentYear.value, 11, 31));
 const displayDates = ref(Array.from({ length: 12 }, () => Array.from({ length: 6 }, () => Array.from({ length: 7 }, () => null))));
 const isLoadingCalendarData = ref(props.isLoadingCalendar);
 
+// This will call before any component is rendered and mounted on DOM
 onBeforeMount(() => {
   setupDisplayDates();
-})
+});
 
+// These watch for props changes from parent
 watch(() => props.isLoadingCalendar, (updateValue: any) => {
   isLoadingCalendarData.value = updateValue;
 });
@@ -94,8 +96,9 @@ watch(() => props.submissionDates, (updateValue: any) => {
   }));
   currentYearDates.value = activeDates.filter(date => date.activeDate.getFullYear() === currentYear.value);
   setupDisplayDates();
-})
+});
 
+// This assign the style to individual square that represent day and submissions
 function getStyles(dayIndex: number, weekIndex: number, monthIndex: number) {
   if (toRaw(displayDates.value).length === 0) {
     return `bg-green-200`;
@@ -150,6 +153,7 @@ function setupDisplayDates() {
       currentWeek = 0;
     }
 
+    // Push in the date and submission numbers into heatmap
     toRaw(displayDates.value)[currentMonth][currentWeek][currentDate.getDay()] = {
       date: currentDate.toUTCString(),
       submissions: index !== -1 ? toRaw(currentYearDates.value)[index].submissions : 0
@@ -158,5 +162,4 @@ function setupDisplayDates() {
     currentDate.setDate(currentDate.getDate() + 1);
   }
 }
-
 </script>

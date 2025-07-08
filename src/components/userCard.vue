@@ -4,8 +4,14 @@
     <template #header>
       <div class="flex flex-row justify-start gap-4">
         <p class="text-left text-3xl">Leetcode Profile {{ viewYear }}</p>
-        <UButton v-bind:disabled="viewYear === activeYears[activeYears.length - 1]" @click="handleYearChange('back')">Previous year</UButton>
-        <UButton v-bind:disabled="viewYear === activeYears[0]" @click="handleYearChange('next')">Next Year</UButton>
+        <UButton 
+          v-bind:disabled="viewYear === activeYears[activeYears.length - 1] || activeYears.length === 0" 
+          @click="handleYearChange(true)"
+        >Previous year</UButton>
+        <UButton 
+          v-bind:disabled="viewYear === activeYears[0] || activeYears.length === 0" 
+          @click="handleYearChange(false)"
+        >Next Year</UButton>
       </div>
     </template>
     <div class="h-[500px] grid grid-cols-3">
@@ -18,9 +24,11 @@
         ></img>
         </div>
         <div class="flex items-start flex-col">
-          <p class="text-black text-2xl text-center font-bold">{{ toRaw(userData.value.matchedUser.username) }}</p>
+          <p class="text-black text-2xl text-center font-bold mb-2">{{ toRaw(userData.value.matchedUser.username) }}</p>
           <p class="text-black text-2xl text-center">Problem solved: {{ toRaw(userData.value.matchedUser.submitStats.totalSubmissionNum[0].count) }}</p>
           <p class="text-black text-2xl text-center">Ranking: {{ toRaw(userData.value.matchedUser.profile.ranking) }}</p>
+          <p class="text-black text-2xl text-center">Max streak: {{ toRaw(userData.value.matchedUser.userCalendar.streak) }}</p>
+          <p class="text-black text-2xl text-center">Total active days: {{ toRaw(userData.value.matchedUser.userCalendar.totalActiveDays) }}</p>
         </div>
       </div>
       <div class="col-span-2 rounded-r-md grid grid-rows-5">
@@ -67,7 +75,7 @@
               }"
             ></div>
           </div>
-          <div class="flex flex-col justify-center ml-5">
+          <div v-if="toRaw(userData.value.matchedUser.languageProblemsCount.length !== 0)" class="flex flex-col justify-center ml-5">
             <p class="text-black text-2xl font-bold">Top Languages</p>
             <p v-for="i in NUM_LANGUAGE_DISPLAY" class="text-black text-2xl">
               {{ toRaw(userData.value.matchedUser.languageProblemsCount[i - 1].languageName) }}
@@ -103,6 +111,8 @@ const isLoadingCalendar = ref(true);
 const viewYear = ref(new Date().getFullYear());
 const activeYears = ref([]);
 
+// Use reactive instead of ref to prevent assigning value back
+// since these are for display purposes only.
 const userData = reactive({
   matchedUser: {},
   recentSubmissionList: [],
@@ -116,7 +126,7 @@ const problemData = reactive({
 
 onMounted(async () => {
   // Fetch the leetcode user if username available
-  await fetchUserProfile()
+  await fetchUserProfile();
 
   // Fetch all current problem counts
   try {
@@ -147,12 +157,13 @@ watch(() => props.lcUsername, async (updateValue: string) => {
   isLoadingState.value = false;
 });
 
-const handleYearChange = async (type: string) => {
-  viewYear.value = type === 'back' ? viewYear.value - 1 : viewYear.value === new Date().getFullYear() ? viewYear.value : viewYear.value + 1;
+const handleYearChange = async (isBack: boolean) => {
+  viewYear.value = isBack ? viewYear.value - 1 : viewYear.value === new Date().getFullYear() ? viewYear.value : viewYear.value + 1;
 
   await fetchUserProfile();
 }
 
+// This will fetch the whole user profile includings problems and calendar heatmap
 async function fetchUserProfile() {
   isLoadingCalendar.value = true;
 
@@ -170,7 +181,7 @@ async function fetchUserProfile() {
       activeYears.value = toRaw(userData.value.matchedUser.userCalendar.activeYears);
     }
 
-    // console.log(toRaw(userData.value))
+    //console.log(toRaw(userData.value));
     isLoadingCalendar.value = false;
   } catch (error: any ) {
     reportError(error, { section : `users/${username.value}`});
@@ -213,5 +224,4 @@ div[role=progress-circle]::after {
   font-size:xx-large;
   font-weight: bold;
 }
-
 </style>
