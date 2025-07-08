@@ -1,4 +1,3 @@
-// ~/server/api/groups/index.get.ts
 import { PrismaClient } from '@prisma/client';
 
 const prisma = new PrismaClient();
