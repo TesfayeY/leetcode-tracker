@@ -9,7 +9,7 @@
       </div>
     </template>
     <div class="h-[400px]">
-      <UTable :rows="displayRows" :columns="columns">
+      <UTable :rows="displayRows" :columns="columns" :empty-state="{ icon: 'i-heroicons-inbox', label: 'No inbox' }">
         <template #actions-data="{ row }">
           <UDropdown :items="actionItems(row)">
             <UButton color="gray" icon="i-heroicons-ellipsis-horizontal-20-solid"></UButton>

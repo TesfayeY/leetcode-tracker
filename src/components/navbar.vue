@@ -13,7 +13,6 @@
       <UserMenu :profilePath="`/users/${displayName}`" class="z-[100]"></UserMenu>
     </div>
   </nav>
-  <UDivider :avatar="{ src: '/img/logo-sq.png' }" />
 </template>
 
 <script setup>

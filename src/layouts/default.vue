@@ -1,9 +1,10 @@
 <template>
   <header>
-      <div>
-        <Logo />
-        <Navbar/>
-      </div>
+    <div class="flex flex-row justify-between items-center">
+      <Logo />
+      <Navbar/>
+    </div>
+    <UDivider :avatar="{ src: '/img/logo-sq.png' }" />
   </header>
   <div>
     <ClientOnly>
