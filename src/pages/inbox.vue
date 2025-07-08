@@ -12,14 +12,14 @@
       <UTable :rows="displayRows" :columns="columns">
         <template #actions-data="{ row }">
           <UDropdown :items="actionItems(row)">
-            <UButton color="gray" variant="ghost" icon="i-heroicons-ellipsis-horizontal-20-solid" />
+            <UButton color="gray" icon="i-heroicons-ellipsis-horizontal-20-solid"></UButton>
           </UDropdown>
         </template>
       </UTable>
     </div>
     <template #footer>
       <div class="flex felx-row justify-end">
-        <UPagination v-model="page" :page-count="pageCount" :total="toRaw(inboxes.value).length" />
+        <UPagination v-model="page" :page-count="pageCount" :total="toRaw(inboxes.value).length"></UPagination>
       </div>
     </template>
   </UCard>
@@ -93,7 +93,7 @@ const actionItems = (row: any) => [
   }, 
   {
     label: 'Delete',
-    icon: 'i-heroicons-trash-20-solid',
+    icon: 'i-heroicons-trash-solid',
     click: () => handleADeleteInbox(row)
   }]
 ];
