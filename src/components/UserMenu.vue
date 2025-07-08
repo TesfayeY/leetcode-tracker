@@ -32,6 +32,12 @@
           Profile
         </UButton>
         <UButton
+          @click="goTo('/inbox')" 
+          class="flex mt-2 items-center w-full text-lg justify-center hover:bg-gray-300 cursor-pointer text-black"
+        >
+          Inbox
+        </UButton>
+        <UButton
           @click="goTo('/settings')"
           class="flex mt-2 items-center w-full text-lg justify-center hover:bg-gray-300 cursor-pointer text-black"
         >
