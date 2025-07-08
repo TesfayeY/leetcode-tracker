@@ -26,6 +26,7 @@ export default defineEventHandler(async (event) => {
 
   // Sort the language in descending order on # of problems solved
   languageProfile.sort((first, second) => second.problemsSolved - first.problemsSolved);
+  submissionProfile.activeYears.sort((first, second) => second - first);
   leetcodeProfile.matchedUser.languageProblemsCount = languageProfile;
   leetcodeProfile.matchedUser.userCalendar = submissionProfile;
   

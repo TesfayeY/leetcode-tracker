@@ -1,11 +1,11 @@
 <template>
-  <Loading :isLoading="isLoadingState"></Loading>
+  <Loading :isLoading="isLoadingState" :style="'text-white'"></Loading>
   <UCard v-if="isLoadingState === false">
     <template #header>
       <div class="flex flex-row justify-start gap-4">
         <p class="text-left text-3xl">Leetcode Profile {{ viewYear }}</p>
-        <UButton @click="handleYearChange('back')">Previous year</UButton>
-        <UButton @click="handleYearChange('next')">Next Year</UButton>
+        <UButton v-bind:disabled="viewYear === activeYears[activeYears.length - 1]" @click="handleYearChange('back')">Previous year</UButton>
+        <UButton v-bind:disabled="viewYear === activeYears[0]" @click="handleYearChange('next')">Next Year</UButton>
       </div>
     </template>
     <div class="h-[500px] grid grid-cols-3">
@@ -76,11 +76,11 @@
             </p>
           </div>    
         </div>
-        <div class="bg-blue-100 row-span-2 h-full">
-          <Calendar 
+        <div class="bg-blue-100 row-span-2 h-full place-content-center">
+          <Calendar
             :submissionDates="toRaw(userData.value.matchedUser.userCalendar.submissionCalendar)"
-            :activeYears="toRaw(userData.value.matchedUser.userCalendar.activeYears)"
             :currentYear="viewYear"
+            :isLoadingCalendar="isLoadingCalendar"
           ></Calendar>
         </div>
       </div>
@@ -99,7 +99,9 @@ const token = useCookie('token');
 const lcUsername = ref(props.lcUsername);
 const username = ref(props.username);
 const isLoadingState = ref(true);
+const isLoadingCalendar = ref(true);
 const viewYear = ref(new Date().getFullYear());
+const activeYears = ref([]);
 
 const userData = reactive({
   matchedUser: {},
@@ -152,6 +154,8 @@ const handleYearChange = async (type: string) => {
 }
 
 async function fetchUserProfile() {
+  isLoadingCalendar.value = true;
+
   try {
     const response = await $fetch(`/api/user/profile?lcUsername=${lcUsername.value}&year=${viewYear.value}`, {
       method: 'GET',
@@ -163,7 +167,11 @@ async function fetchUserProfile() {
 
     if (response.data) {
       userData.value = response.data;
+      activeYears.value = toRaw(userData.value.matchedUser.userCalendar.activeYears);
     }
+
+    // console.log(toRaw(userData.value))
+    isLoadingCalendar.value = false;
   } catch (error: any ) {
     reportError(error, { section : `users/${username.value}`});
   }

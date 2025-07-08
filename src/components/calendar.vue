@@ -1,5 +1,6 @@
 <template>
-  <div class="grid grid-rows-4">
+  <Loading :isLoading="isLoadingCalendarData" :style="'text-black'"></Loading>
+  <div v-if="isLoadingCalendarData === false" class="grid grid-rows-4">
     <div class="bg-red-100 row-span-1 h-12 grid grid-cols-12">
       <div class="bg-gray-100 place-content-center">
         <p class="text-black text-bold text-center text-2xl">Jan</p>
@@ -42,7 +43,6 @@
       <div v-for="(month, monthIndex) in months" class="bg-yellow-100 grid grid-cols-6">
         <div v-for="(week, weekIndex) in weeks" class="grid grid-rows-7">
           <div v-for="(day, dayIndex) in days" :class="getStyles(dayIndex, weekIndex, monthIndex)">
-
           </div>
         </div>
       </div>
@@ -51,15 +51,15 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onBeforeMount, defineProps } from 'vue';
+import { ref, onBeforeMount, defineProps, defineEmits } from 'vue';
+
+const props = defineProps(['submissionDates', 'currentYear', 'isLoadingCalendar']);
+const emit = defineEmits(['start-fetch', 'finish-fetch']);
 
 const days = ref(new Array(7));
 const weeks = ref(new Array(6));
 const months = ref(new Array(12));
-
-const props = defineProps(['submissionDates', 'activeYears', 'currentYear']);
 const submissionDates = ref(JSON.parse(props.submissionDates));
-const activeYears = ref(props.activeYears.sort((first: number, second: number) => second - first));
 const currentYear = ref(props.currentYear)
 let activeDates = Object.keys(toRaw(submissionDates.value)).map((key) => ({
   activeDate: new Date(parseInt(key) * 1000),
@@ -70,10 +70,15 @@ const currentYearDates = ref(activeDates.filter(date => date.activeDate.getFullY
 const startDate = ref(new Date(currentYear.value, 0));
 const endDate = ref(new Date(currentYear.value, 11, 31));
 const displayDates = ref(Array.from({ length: 12 }, () => Array.from({ length: 6 }, () => Array.from({ length: 7 }, () => null))));
+const isLoadingCalendarData = ref(props.isLoadingCalendar);
 
 onBeforeMount(() => {
   setupDisplayDates();
 })
+
+watch(() => props.isLoadingCalendar, (updateValue: any) => {
+  isLoadingCalendarData.value = updateValue;
+});
 
 watch(() => props.currentYear, (updateValue: any) => {
   currentYear.value = updateValue;
@@ -88,29 +93,28 @@ watch(() => props.submissionDates, (updateValue: any) => {
     submissions: toRaw(submissionDates.value[key]),
   }));
   currentYearDates.value = activeDates.filter(date => date.activeDate.getFullYear() === currentYear.value);
-  console.log(activeDates)
   setupDisplayDates();
 })
 
 function getStyles(dayIndex: number, weekIndex: number, monthIndex: number) {
   if (toRaw(displayDates.value).length === 0) {
-    return `bg-green-200`
+    return `bg-green-200`;
   } else {
     let date = toRaw(displayDates.value)[monthIndex][weekIndex][dayIndex];
 
-    if (date !== null) {
-      let submissions = toRaw(displayDates.value)[monthIndex][weekIndex][dayIndex].submissions;
-
-      let bgColor = submissions >= 1 && submissions < 10 ? `bg-green-300`
-      : submissions >= 10 && submissions < 20 ? `bg-green-400` 
-      : submissions >= 20 ? `bg-green-500`: `bg-green-200`;
-
-      let otherStyles = 'border-[1px] border-gray-100'
-
-      return bgColor + ' ' + otherStyles;
-    } else {
-      return `bg-gray-100`
+    if (date === null) {
+      return `bg-gray-100`;
     }
+
+    let submissions = toRaw(displayDates.value)[monthIndex][weekIndex][dayIndex].submissions;
+
+    let bgColor = submissions >= 1 && submissions < 10 ? `bg-green-300`
+    : submissions >= 10 && submissions < 20 ? `bg-green-400` 
+    : submissions >= 20 ? `bg-green-500`: `bg-green-200`;
+
+    let otherStyles = 'border-[1px] border-gray-100';
+
+    return bgColor + ' ' + otherStyles;
   }
 }
 
@@ -122,9 +126,9 @@ function compareDates(currentDate: Date, targetDate: Date) {
   return date === targetDate.getDate() && month === targetDate.getMonth() && year === targetDate.getFullYear();
 }
 
+// This will create a 3D array to represent day, week, month of the calendar
 function setupDisplayDates() {
-  //Fill in inactive dates to be zero submission
-
+  displayDates.value = Array.from({ length: 12 }, () => Array.from({ length: 6 }, () => Array.from({ length: 7 }, () => null)));
   let currentDate = new Date(startDate.value);
   let currentWeek = 0;
   let currentMonth = currentDate.getMonth();
