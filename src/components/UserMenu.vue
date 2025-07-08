@@ -1,51 +1,11 @@
 <template>
-  <div @keydown.escape="isOpen = false">
-    <button
-      @click="isOpen = !isOpen"
-      class="focus:outline-none p-1"
-      aria-haspopup="true"
-      :aria-expanded="isOpen"
-    >
-      <img
-        :src="user.avatarUrl"
-        alt="Your avatar"
-        class="w-8 h-8 rounded-full"
-      />
-    </button>
-
-    <transition name="fade">
-      <ul
-        v-if="isOpen"
-        class="absolute right-0 mt-2 w-[150px] bg-[#363636] shadow-lg rounded-md overflow-hidden"
-        role="menu"
-      >
-        <UButton
-          @click="goTo('/welcome')"
-          class="flex items-center w-full text-lg justify-center hover:bg-gray-300 cursor-pointer text-black"
-        >
-          Home
-        </UButton>
-        <UButton
-          @click="goTo(profilePath)" 
-          class="flex mt-2 items-center w-full text-lg justify-center hover:bg-gray-300 cursor-pointer text-black"
-        >
-          Profile
-        </UButton>
-        <UButton
-          @click="goTo('/settings')"
-          class="flex mt-2 items-center w-full text-lg justify-center hover:bg-gray-300 cursor-pointer text-black"
-        >
-          Settings
-        </UButton>
-        <UButton
-          @click="logout"
-          class="flex mt-2 items-center w-full text-lg justify-center hover:bg-gray-300 cursor-pointer text-red-600"
-        >
-          Logout
-        </UButton>
-      </ul>
-    </transition>
-  </div>
+  <UDropdown :items="items" :ui="{ item: { disabled: 'cursor-text select-text', size: 'text-lg' } }" :popper="{ placement: 'bottom-start' }">
+    <UAvatar :src="user.avatarUrl" size="md"></UAvatar>
+    <template #item="{ item }">
+      <span class="truncate">{{ item.label }}</span>
+      <UIcon :name="item.icon" class="flex-shrink-0 h-4 w-4 text-gray-400 dark:text-gray-500 ms-auto"></UIcon>
+    </template>
+  </UDropdown>
 </template>
 
 <script setup>
@@ -63,6 +23,34 @@ const props = defineProps({
 const isOpen = ref(false)
 const router = useRouter()
 const user = { avatarUrl: '/img/avatar.png' } // Keep for now as you only want minimal change
+
+const items = [
+  [{
+    label: 'Home',
+    icon: 'i-heroicons-home-20-solid',
+    click: () => goTo('/welcome')
+  },
+  {
+    label: 'Profile',
+    icon: 'i-heroicons-user-circle',
+    click: () => goTo(props.profilePath)
+  },
+  {
+    label: 'Inbox',
+    icon: 'i-heroicons-envelope',
+    click: () => goTo('/inbox')
+  },
+  {
+    label: 'Settings',
+    icon: 'i-heroicons-cog-8-tooth',
+    click: () => goTo('/settings')
+  }],
+  [{
+    label: 'Logout',
+    icon: 'i-heroicons-arrow-right-start-on-rectangle-solid',
+    click: () => logout()
+  }]
+]
 
 // goTo now accepts the full path directly
 function goTo(path) { // Changed 'page' to 'path' for clarity
