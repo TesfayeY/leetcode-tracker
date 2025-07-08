@@ -1,39 +1,43 @@
 <script setup lang="ts">
-import { ref } from 'vue'
-import { useRouter } from 'vue-router'
+import { ref } from 'vue';
+import { useRouter } from 'vue-router';
 
-const emit = defineEmits(['close'])
+const emit = defineEmits(['close']);
 
-const router = useRouter()
-const groupId = ref('')
-const error = ref('')
-const isSubmitting = ref(false)
+const router = useRouter();
+const groupId = ref('');
+const error = ref('');
+const isSubmitting = ref(false);
 
 function close() {
-  emit('close')
+  emit('close');
 }
 
 async function joinGroup() {
-  error.value = ''
+  error.value = '';
   if (!groupId.value.trim()) {
-    error.value = 'Group ID is required.'
-    return
+    error.value = 'Group ID is required.';
+    return;
   }
 
-  isSubmitting.value = true
+  isSubmitting.value = true;
   try {
-    // ← replace with your real API call to verify/join group:
-    // const res = await $fetch(`/api/groups/${groupId.value}/join`, { method: 'POST' })
-    // if (!res.success) throw new Error(res.message)
-    await new Promise(r => setTimeout(r, 300)) // simulate latency
-
-    router.push(`/groups/${groupId.value.trim()}`)
-    emit('close')
+    const response = await $fetch(`/api/groups/${groupId.value.trim()}/join`, {
+      method: 'POST',
+    });
+    if (response.group) {
+      router.push(`/groups/${response.group.uniqueGroupId}`);
+      emit('close');
+    } else if (response.message) {
+      // handles any  cases where the user is already a member
+      router.push(`/groups/${groupId.value.trim()}`); //navigate even if already in group
+      emit('close');
+    }
   } catch (e: any) {
-    console.error(e)
-    error.value = e.statusMessage || 'Unable to join. Check the Group ID and try again.'
+    console.error('Frontend error:', e);
+    error.value = e.data?.message || e.statusMessage || 'Unable to join. Check the Group ID and try again.';
   } finally {
-    isSubmitting.value = false
+    isSubmitting.value = false;
   }
 }
 </script>
