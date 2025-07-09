@@ -1,7 +1,7 @@
 import { readBody, parseCookies, H3Event, getQuery } from 'h3';
 import prisma from '../../database/db';
 import { extractUserIdFromToken } from '../../jwt';
-import graphqlFetch from '../utils/graphqlFetch';
+import { graphqlFetch, graphqlHeaderFetch } from '../utils/graphqlFetch';
 import readGraphqlFiles from '../utils/graphql-parse';
 
 export async function getLeetcodeProfile(event: H3Event, queryFile: string) {
@@ -69,6 +69,50 @@ export async function addLeetcodeUsername(event: H3Event, queryFile: any) {
     return { message: 'User Profile added successfully' };
 
   } catch(error: any) {
+    throw error;
+  }
+}
+
+export async function validateLeetcodeUsername(event: H3Event, queryFile: any) {
+  const cookies = parseCookies(event);
+  const extractedUserId = await extractUserIdFromToken(cookies.token);
+  const userId = extractedUserId !== null ? extractedUserId : undefined;
+  const queryParams = getQuery(event);
+
+  const body = await readBody(event);
+  const sessionToken = body.sessionToken;
+  let csrf = '';
+
+  // Get the CSRF token
+  try {
+    const query = readGraphqlFiles('getUserSession');
+    const response = await graphqlHeaderFetch(query);
+    csrf = response.headers.getSetCookie()[0].split(';')[0].split('=')[1];
+  } catch (error:any) {
+    throw error;
+  }
+  
+  // Fetch the global state of user
+  try {
+    const query = readGraphqlFiles(queryFile);
+    const response = await graphqlFetch(query, {}, csrf, sessionToken);
+
+    if (response === null) {
+      throw createError({ statusCode: 500, statusMessage: "Server error" });
+    }
+
+    // Check if the token is valid
+    if (response.data.userStatus.userId === null) {
+      throw createError({ statusCode: 400, statusMessage: 'Invalid token, please check again'});
+    }
+
+    // Check if the username entered is the same as the retrieval name
+    if (response.data.userStatus.realName !== queryParams.lcUsername.toString()) {
+      throw createError({ statusCode: 404, statusMessage: 'User does not match' });
+    }
+    
+    return response;
+  } catch (error: any) {
     throw error;
   }
 }

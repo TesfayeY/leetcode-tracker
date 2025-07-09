@@ -2,6 +2,7 @@ query {
     userStatus {
         userId
         username
+        realName
         avatar
         isSignedIn
         isMockUser
