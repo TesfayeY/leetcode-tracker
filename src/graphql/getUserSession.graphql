@@ -1,0 +1,22 @@
+query {
+    userStatus {
+        userId
+        username
+        avatar
+        isSignedIn
+        isMockUser
+        isPremium
+        isVerified
+        isAdmin
+        isSuperuser
+        isTranslator
+        checkedInToday
+        permissions
+    }
+}
+
+# Headers: {
+#   ...
+#   Cookies: 'crsftoken=<crsftoken>; LEETCODE_SESSION=<lctoken>',
+#   X-crsftoken: '<crsftoken>'
+# }

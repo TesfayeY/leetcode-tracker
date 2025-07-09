@@ -1,0 +1,13 @@
+query {
+    streakCounter {
+        streakCount
+        daysSkipped
+        currentDayCompleted
+    }
+}
+
+# Headers: {
+#   ...
+#   Cookies: 'crsftoken=<crsftoken>; LEETCODE_SESSION=<lctoken>',
+#   X-crsftoken: '<crsftoken>'
+# }
