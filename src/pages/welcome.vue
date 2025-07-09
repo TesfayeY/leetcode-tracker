@@ -1,11 +1,14 @@
 <template>
-  <div class="min-h-screen flex items-center justify-center px-4">
-    <div class="text-center">
+  <div class="min-h-screen flex flex-col items-center justify-center px-4"> <div class="text-center mb-8">
       <h1 class="text-3xl font-semibold mb-8">Welcome, {{ userName }}!</h1>
+
+      <hr class="w-full max-w-4xl border-gray-300 my-8" />
+      <GroupCardList ref="groupCardListRef" /> 
+      <hr class="w-full max-w-4xl border-gray-300 my-8" />
 
       <button
         @click="openCreateGroupModal"
-        class="w-48 py-3 mb-4 rounded-lg shadow-md
+        class="w-48 py-3 mb-4 mx-2 rounded-lg shadow-md
                bg-green-600 text-white font-medium
                hover:bg-blue-700 transition"
       >
@@ -76,3 +79,4 @@ function closeJoinGroupModal() {
   }
 }
 </script>
+
