@@ -107,7 +107,7 @@ export async function validateLeetcodeUsername(event: H3Event, queryFile: any) {
     }
 
     // Check if the username entered is the same as the retrieval name
-    if (response.data.userStatus.realName !== queryParams.lcUsername.toString()) {
+    if (response.data.userStatus.username !== queryParams.lcUsername.toString()) {
       throw createError({ statusCode: 404, statusMessage: 'User does not match' });
     }
     
