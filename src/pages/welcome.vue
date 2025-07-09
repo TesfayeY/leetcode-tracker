@@ -1,5 +1,5 @@
 <template>
-  <div class="flex flex-col place-content-evenly h-[60vh] mt-5">
+  <div class="min-h-screen flex items-center justify-center px-4">
     <div class="text-center">
       <h1 class="text-3xl font-semibold mb-8">Welcome, {{ userName }}!</h1>
 
@@ -33,6 +33,7 @@ import { ref, onMounted } from 'vue';
 // Import your modal components
 import JoinGroupModal from '~/components/JoinGroupModal.vue';
 import CreateGroupModal from '~/components/CreateGroupModal.vue';
+import GroupCardList from '~/components/GroupCardList.vue'; 
 
 definePageMeta({
   layout: 'default',
@@ -44,9 +45,12 @@ const userName = ref<string | null>(displayName);
 
 const router = useRouter()
 
-// Reactive variables to control modal visibility
+// reactive variables to control modal visibility
 const showCreateGroupModal = ref(false);
 const showJoinGroupModal = ref(false);
+
+// ref to GroupcardList component to call methods
+const groupCardListRef = ref<InstanceType<typeof GroupCardList> | null>(null); 
 
 function openCreateGroupModal() {
   showCreateGroupModal.value = true;
@@ -54,6 +58,10 @@ function openCreateGroupModal() {
 
 function closeCreateGroupModal() {
   showCreateGroupModal.value = false;
+  //create a group, and refresh groupCardList
+  if (groupCardListRef.value) {
+    groupCardListRef.value.fetchGroups();
+  }
 }
 
 function openJoinGroupModal() {
@@ -62,6 +70,9 @@ function openJoinGroupModal() {
 
 function closeJoinGroupModal() {
   showJoinGroupModal.value = false;
+  // After joining group, refresh GroupCardList 
+  if (groupCardListRef.value) {
+    groupCardListRef.value.fetchGroups();
+  }
 }
 </script>
-
