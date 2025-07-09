@@ -1,6 +1,6 @@
 import { readBody, parseCookies, H3Event, getQuery } from 'h3';
 import { extractUserIdFromToken } from '../../jwt';
-import graphqlFetch from '../utils/graphqlFetch';
+import { graphqlFetch } from '../utils/graphqlFetch';
 import readGraphqlFiles from '../utils/graphql-parse';
 
 export async function getLeetcodeProblem(event: H3Event, queryFile: any) {
