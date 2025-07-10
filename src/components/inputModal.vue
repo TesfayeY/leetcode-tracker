@@ -37,7 +37,6 @@ const sendFormToParent = () => {
 }
 
 const closeModal = () => {
-  isOpen.value = false;
   emit('close-modal');
 }
 
