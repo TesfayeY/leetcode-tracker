@@ -13,7 +13,7 @@ async function getGroupDetails(uniqueGroupId: string, userId: number) {
       users: { some: { id: userId } }
     },
     include: {
-      users: { select: { id: true, name: true } }
+      users: { select: { id: true, name: true, email: true } }
     }
   })
   if (!group) {

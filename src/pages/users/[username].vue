@@ -2,12 +2,12 @@
   <div class="grid grid-rows-20">
     <div class="flex flex-row justify-start gap-5 h-[5vh] row-span-1 items-center">
       <UButton class="p-2 px-3 text-md h-full" to="/welcome">Return</UButton>
-      <UButton v-if="hasLeetcodeProfile" class="p-2 px-3 text-md h-full" @click="openModal('Change Leetcode Username')">Change Profile</UButton>
-      <UButton v-if="hasLeetcodeProfile && isProfileVerified === false" class="p-2 px-3 text-md h-full" @click="handleLinkProfile()">Link Leetcode Profile</UButton>
+      <UButton v-if="hasLeetcodeProfile && isSelf" class="p-2 px-3 text-md h-full" @click="openModal('Change Leetcode Username')">Change Profile</UButton>
+      <UButton v-if="hasLeetcodeProfile && isProfileVerified === false && isSelf" class="p-2 px-3 text-md h-full" @click="handleLinkProfile()">Link Leetcode Profile</UButton>
     </div>
     <div v-if="!hasLeetcodeProfile" class="row-span-19 flex flex-col place-content-evenly h-[60vh] mt-5">
       <p class="text-center text-3xl">There is no profile to display</p>
-      <UButton class="p-3 text-lg" @click="openModal('Add Leetcode Username')">Add Leetcode Profile</UButton>
+      <UButton v-if="isSelf" class="p-3 text-lg" @click="openModal('Add Leetcode Username')">Add Leetcode Profile</UButton>
     </div>
     <div v-else class="flex flex-col place-content-evenly h-[60vh] mt-5">
       <UserCard :lcUsername="lcUsername" :username="username" :isProfileVerified="isProfileVerified"></UserCard>
@@ -47,6 +47,7 @@ import UserCard from '../../components/userCard.vue';
 
 const { reportError } = useErrorLogger();
 const route = useRoute();
+const config = useRuntimeConfig(); 
 const username = ref(route.params.username);
 const errorInfo = ref({});
 const token = useCookie('token') ;
@@ -56,6 +57,7 @@ const isLinkModalOpen = ref(false);
 const modalTitle = ref('');
 const lcUsername = ref('');
 const isProfileVerified = ref(false);
+const isSelf = ref(true);
 
 const openModal = (title: string) => {
   modalTitle.value = title;
@@ -72,7 +74,7 @@ const closeModal = () => {
 onBeforeMount(async () => {
   // Fetch the account data to check for leetcode username
   try {
-    const response = await $fetch(`/api/user/me`, {
+    const response = await $fetch(`/api/user/me?username=${username.value}`, {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',
@@ -84,6 +86,7 @@ onBeforeMount(async () => {
       hasLeetcodeProfile.value = response.data.lcUsername !== "";
       lcUsername.value = response.data.lcUsername;
       isProfileVerified.value = response.data.isVerified;
+      isSelf.value = response.data.isSelf;
     }
 
   } catch(error: any) {

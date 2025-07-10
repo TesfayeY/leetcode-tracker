@@ -1,4 +1,4 @@
-import { readBody, parseCookies, H3Event } from 'h3';
+import { readBody, parseCookies, H3Event, getQuery } from 'h3';
 import bcrypt from 'bcrypt';
 import prisma from '../../database/db';
 import { createJwtToken, extractUserIdFromToken } from '../../jwt';
@@ -7,18 +7,35 @@ export async function getUserData(event: H3Event) {
   const cookies = parseCookies(event);
   const extractedUserId = await extractUserIdFromToken(cookies.token);
   const userId = extractedUserId !== null ? extractedUserId : undefined;
+  const queryParams = getQuery(event);
+
+  const username = queryParams.username.toString()
+  let isSelf = true;
 
   if (userId === undefined) {
-      throw createError({statusCode: 401, statusMessage:'Invalid user'});
+    throw createError({statusCode: 401, statusMessage:'Invalid user'});
   }
 
-  const user = await prisma.user.findUnique({ where: { id: userId } });
+  const user = await prisma.user.findUnique({ where: { email: username } });
 
   if (!user) {
-      throw createError({statusCode: 401, statusMessage:'Invalid user'});
+    throw createError({statusCode: 401, statusMessage:'Invalid user'});
+  }
+  
+  if (userId !== user.id) {
+    isSelf = false;
   }
 
-  return { data: { id: user.id, name: user.name, lcUsername: user.lcUsername, isVerified: user.isProfileVerified }, message: "Successfully retrieve user" }
+  return { 
+    data: { 
+      id: user.id, 
+      name: user.name, 
+      lcUsername: user.lcUsername, 
+      isVerified: user.isProfileVerified,
+      isSelf: isSelf 
+    }, 
+    message: "Successfully retrieve user" 
+  }
 }
 
 export async function changeDisplayName(event: H3Event) {

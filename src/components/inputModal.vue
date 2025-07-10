@@ -11,7 +11,7 @@
     <template #footer>
       <div class="flex justify-end space-x-2">
         <UButton @click="closeModal" variant="ghost">Cancel</UButton>
-        <UButton color="green" @click="sendFormToParent">Submit</UButton>
+        <UButton v-bind:disabled="inputField.length === 0" color="green" @click="sendFormToParent">Submit</UButton>
       </div>
     </template>
   </UCard>

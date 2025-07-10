@@ -47,7 +47,8 @@ onMounted(async () => {
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ token: token }) 
   }).then((data) => { 
-    displayName.value = useCookie('name').value;
+    displayName.value = useCookie('email').value;
+    console.log(displayName.value)
     return data;
   }).catch((error) => {
     Sentry.captureException(error, {
