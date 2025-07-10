@@ -10,7 +10,7 @@ export default defineEventHandler(async (event) => {
 
   const body = await readBody(event);
 
-  if ('lcUsername' in body) {
+  if ('lcUsername' in body && 'isProfileVerified' in body) {
     return addLeetcodeUsername(event, "getUserProfile");
   } else {
     event.res.statusCode = 400;

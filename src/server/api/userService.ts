@@ -18,7 +18,7 @@ export async function getUserData(event: H3Event) {
       throw createError({statusCode: 401, statusMessage:'Invalid user'});
   }
 
-  return { data: { id: user.id, name: user.name, lcUsername: user.lcUsername }, message: "Successfully retrieve user" }
+  return { data: { id: user.id, name: user.name, lcUsername: user.lcUsername, isVerified: user.isProfileVerified }, message: "Successfully retrieve user" }
 }
 
 export async function changeDisplayName(event: H3Event) {

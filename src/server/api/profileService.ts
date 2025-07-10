@@ -3,6 +3,7 @@ import prisma from '../../database/db';
 import { extractUserIdFromToken } from '../../jwt';
 import { graphqlFetch, graphqlHeaderFetch } from '../utils/graphqlFetch';
 import readGraphqlFiles from '../utils/graphql-parse';
+import { getUserData } from './userService';
 
 export async function getLeetcodeProfile(event: H3Event, queryFile: string) {
   const cookies = parseCookies(event);
@@ -36,6 +37,7 @@ export async function addLeetcodeUsername(event: H3Event, queryFile: any) {
 
   const body = await readBody(event);
   const newUserName = body.lcUsername;
+  const newProfileVerified = body.isProfileVerified;
 
   if (!newUserName) {
       throw createError({statusCode: 400, statusMessage: "Missing Fields" });
@@ -64,7 +66,7 @@ export async function addLeetcodeUsername(event: H3Event, queryFile: any) {
       throw createError({statusCode: 404, statusMessage: "Leetcode user not found" });
     }
     
-    await prisma.user.update({ where: { id: userId }, data: { lcUsername: newUserName } });
+    await prisma.user.update({ where: { id: userId }, data: { lcUsername: newUserName, isProfileVerified: newProfileVerified } });
 
     return { message: 'User Profile added successfully' };
 
@@ -110,8 +112,22 @@ export async function validateLeetcodeUsername(event: H3Event, queryFile: any) {
     if (response.data.userStatus.username !== queryParams.lcUsername.toString()) {
       throw createError({ statusCode: 404, statusMessage: 'User does not match' });
     }
+
+    // Store the sessionToken into User modal
+    await prisma.user.update({
+      where: {
+        id: userId
+      },
+      data: {
+        lcSessionToken: sessionToken,
+        isProfileVerified: true
+      }
+    })
+
+    // Fetch the user account back
+    const userAccountResponse = await getUserData(event)
     
-    return response;
+    return userAccountResponse;
   } catch (error: any) {
     throw error;
   }
