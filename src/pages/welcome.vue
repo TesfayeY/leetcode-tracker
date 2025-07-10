@@ -26,35 +26,36 @@
       </div>
       
     </div>
-    <InputModal
-      :isOpen="showCreateGroupModal"
-      :title="'Create new Group'"
-      :description="'Group Name'"
-      :errorInfo="errorInfo"
-      @close-modal="closeModal"
-      @submit-form="handleCreateGroupModal"
-    >
-    </InputModal>
-    <InputModal
-      :isOpen="showJoinGroupModal"
-      :title="'Join a Group'"
-      :description="'Group ID'"
-      :errorInfo="errorInfo"
-      @close-modal="closeModal"
-      @submit-form="handleJoinGroupModal"
-    >
-    </InputModal>
-    <!-- <CreateGroupModal v-if="showCreateGroupModal" @close="closeCreateGroupModal" /> -->
-    <!-- <JoinGroupModal v-if="showJoinGroupModal" @close="closeJoinGroupModal" /> -->
+    <UModal v-model="showCreateGroupModal">
+      <InputModal
+        v-if="showCreateGroupModal"
+        :title="'Create new Group'"
+        :description="'Group Name'"
+        :errorInfo="errorInfo"
+        @close-modal="closeModal"
+        @submit-form="handleCreateGroupModal"
+      >
+      </InputModal>
+    </UModal>
+    <UModal v-model="showJoinGroupModal">
+      <InputModal
+        v-if="showJoinGroupModal"
+        :title="'Join a Group'"
+        :description="'Group ID'"
+        :errorInfo="errorInfo"
+        @close-modal="closeModal"
+        @submit-form="handleJoinGroupModal"
+      >
+      </InputModal>
+    </UModal>
+    
+    
   </div>
 </template>
 
 <script setup lang="ts">
 import { useRouter } from 'vue-router'
 import { ref, onMounted } from 'vue';
-// Import your modal components
-import JoinGroupModal from '~/components/JoinGroupModal.vue';
-import CreateGroupModal from '~/components/CreateGroupModal.vue';
 import GroupCardList from '~/components/GroupCardList.vue'; 
 
 definePageMeta({
