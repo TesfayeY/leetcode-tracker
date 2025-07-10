@@ -2,39 +2,46 @@
   <div class="grid grid-rows-20">
     <div class="flex flex-row justify-start gap-5 h-[5vh] row-span-1 items-center">
       <UButton class="p-2 px-3 text-md h-full" to="/welcome">Return</UButton>
-      <UButton v-if="hasLeetcodeProfile" class="p-2 px-3 text-md h-full" @click="openModal('Change Leetcode Username')">Change Profile</UButton>
-      <UButton v-if="hasLeetcodeProfile && !isProfileValidated" class="p-2 px-3 text-md h-full" @click="handleLinkProfile()">Link Leetcode Profile</UButton>
+      <UButton v-if="hasLeetcodeProfile && isSelf" class="p-2 px-3 text-md h-full" @click="openModal('Change Leetcode Username')">Change Profile</UButton>
+      <UButton v-if="hasLeetcodeProfile && isProfileVerified === false && isSelf" class="p-2 px-3 text-md h-full" @click="handleLinkProfile()">Link Leetcode Profile</UButton>
     </div>
     <div v-if="!hasLeetcodeProfile" class="row-span-19 flex flex-col place-content-evenly h-[60vh] mt-5">
       <p class="text-center text-3xl">There is no profile to display</p>
-      <UButton class="p-3 text-lg" @click="openModal('Add Leetcode Username')">Add Leetcode Profile</UButton>
+      <UButton v-if="isSelf" class="p-3 text-lg" @click="openModal('Add Leetcode Username')">Add Leetcode Profile</UButton>
     </div>
     <div v-else class="flex flex-col place-content-evenly h-[60vh] mt-5">
-      <UserCard :lcUsername="lcUsername" :username="username"></UserCard>
+      <UserCard :lcUsername="lcUsername" :username="username" :isProfileVerified="isProfileVerified"></UserCard>
     </div>
   </div>
-  <InputModal 
-    v-if="isInputModalOpen" 
-    :errorInfo="errorInfo"
-    :title="modalTitle"
-    @close-modal="closeModal" 
-    @submit-form="handleInputFormModal"
-  ></InputModal>
-  <InputModal 
-    v-if="isLinkModalOpen" 
-    :errorInfo="errorInfo"
-    :title="modalTitle"
-    :description="'You can obtain the Leetcode Session by login to Leetcode and open Browser Inspection, navigate to Application tab, then click on the Cookies dropdown. Do not share this token!'"
-    :placeholder="'Leetcode Session Token'"
-    @close-modal="closeModal" 
-    @submit-form="handleValidateProfile"
-  ></InputModal>
+  <UModal v-model="isInputModalOpen">
+    <InputModal
+      v-if="isInputModalOpen" 
+      :errorInfo="errorInfo"
+      :title="modalTitle"
+      :description="'Ensure the username is owned by you!'"
+      @close-modal="closeModal" 
+      @submit-form="handleInputFormModal"
+    ></InputModal>
+  </UModal>
+  <UModal v-model="isLinkModalOpen">
+    <InputModal 
+      v-if="isLinkModalOpen" 
+      :errorInfo="errorInfo"
+      :title="modalTitle"
+      :description="LEETCODE_SESSION_INSTRUCTION"
+      :placeholder="'Leetcode Session Token'"
+      @close-modal="closeModal" 
+      @submit-form="handleValidateProfile"
+    ></InputModal>
+  </UModal>
+  
 </template>
 
 <script lang="ts" setup>
 import { useRoute } from 'vue-router';
-import { ref, onMounted } from 'vue';
+import { ref, onMounted, onBeforeMount } from 'vue';
 import { useErrorLogger } from '../../composables/useErrorLogger';
+import { LEETCODE_SESSION_INSTRUCTION } from '~/constants/appConst';
 import InputModal from '../../components/inputModal.vue';
 import UserCard from '../../components/userCard.vue';
 
@@ -48,7 +55,8 @@ const isInputModalOpen = ref(false);
 const isLinkModalOpen = ref(false);
 const modalTitle = ref('');
 const lcUsername = ref('');
-const isProfileValidated = ref(false);
+const isProfileVerified = ref(false);
+const isSelf = ref(true);
 
 const openModal = (title: string) => {
   modalTitle.value = title;
@@ -56,16 +64,16 @@ const openModal = (title: string) => {
 }
 
 const closeModal = () => {
-  errorInfo.value = null;;
+  errorInfo.value = null;
   isInputModalOpen.value = false;
   isLinkModalOpen.value = false;
   modalTitle.value = '';
 }
 
-onMounted(async () => {
+onBeforeMount(async () => {
   // Fetch the account data to check for leetcode username
   try {
-    const response = await $fetch(`/api/user/me`, {
+    const response = await $fetch(`/api/user/me?username=${username.value}`, {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',
@@ -76,6 +84,8 @@ onMounted(async () => {
     if (response.data) {
       hasLeetcodeProfile.value = response.data.lcUsername !== "";
       lcUsername.value = response.data.lcUsername;
+      isProfileVerified.value = response.data.isVerified;
+      isSelf.value = response.data.isSelf;
     }
 
   } catch(error: any) {
@@ -91,7 +101,7 @@ const handleLinkProfile = async () => {
 const handleValidateProfile = async (modalValue: string) => {
   // Validate the profile by calling for global state data
   try {
-    const response = await $fetch(`/api/user/profile/validate?lcUsername=${lcUsername.value}`, {
+    const response = await $fetch(`/api/user/profile/validate?lcUsername=${lcUsername.value}&username=${username.value}`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -100,7 +110,12 @@ const handleValidateProfile = async (modalValue: string) => {
       body: { sessionToken: modalValue }
     });
 
-    isProfileValidated.value = true;
+    console.log
+
+    if (response.data) {
+      isProfileVerified.value = response.data.isVerified;
+    }
+    
     closeModal();
   } catch (error: any) {
     reportError(error, { section : `users/${username.value}`});
@@ -114,17 +129,18 @@ const handleInputFormModal = async (modalValue: string) => {
   if (modalValue !== "") {
     // Check and Apply to persistent layer
     try {
-      const data = await $fetch('/api/user/profile', {
+      const data = await $fetch(`/api/user/profile?username=${username.value}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          lcUsername: modalValue
+          lcUsername: modalValue,
+          isProfileVerified: false
         }),
       });
 
       lcUsername.value = modalValue;
       hasLeetcodeProfile.value = true;
-      isProfileValidated.value = false;
+      isProfileVerified.value = false;
       closeModal();
 
     } catch (error: any) {

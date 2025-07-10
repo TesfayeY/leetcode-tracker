@@ -127,6 +127,7 @@ import { useRoute, useRouter } from 'vue-router'
 interface User {
   id:          number
   name:        string
+  email:       string
   lc_username: string
 }
 
@@ -203,6 +204,6 @@ async function confirmLeaveGroup() {
   }
 
 function viewProfile(user: User) {
-  router.push(`/users/${user.name}`)
+  router.push(`/users/${user.email}`)
 }
 </script>

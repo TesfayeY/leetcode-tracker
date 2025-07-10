@@ -27,8 +27,7 @@ export default defineEventHandler(async (event) => {
       //if userId is null means either cookie missing or invalid, throw unauthorized error
       throw createError({
         statusCode: 401,
-        statusMessage: 'Unauthorized',
-        message: 'Authentication required. Please log in.',
+        statusMessage: 'Authentication required. Please log in.',
       });
     }
 
@@ -36,8 +35,7 @@ export default defineEventHandler(async (event) => {
     if (!uniqueGroupId || typeof uniqueGroupId !== 'string' || uniqueGroupId.trim() === '') {
       throw createError({
         statusCode: 400,
-        statusMessage: 'Bad Request',
-        message: 'Group ID is required and must be a non-empty string.',
+        statusMessage: 'Group ID is required and must be a non-empty string.',
       });
     }
 
@@ -54,19 +52,15 @@ export default defineEventHandler(async (event) => {
     if (!group) {
       throw createError({
         statusCode: 404,
-        statusMessage: 'Not Found',
-        message: 'Group not found with the provided ID.',
+        statusMessage: 'Group not found with the provided ID.',
       });
     }
 
-    // if the user is already a member of the group
+    // if the user is already a member of the group, just return and navigate to that group
     const isAlreadyMember = group.users.some((user) => user.id === userId);
     if (isAlreadyMember) {
       return {
-        statusCode: 200,
-        statusMessage: 'OK',
-        message: 'You are already a member of this group.',
-        group,
+        group: group
       };
     }
 
@@ -97,15 +91,13 @@ export default defineEventHandler(async (event) => {
       group: updatedGroup,
     };
   } catch (error: any) {
-    console.error('Error joining group:', error);
+    console.error('Error joining group:', error.message);
     if (error.statusCode) {
       throw error;
     } else {
       throw createError({
         statusCode: 500,
-        statusMessage: 'Internal Server Error',
-        message: 'Failed to join group. Please try again later.',
-        data: error.message, // Pass original error message for more detail
+        statusMessage: 'Failed to join group. Please try again later.',
       });
     }
   } finally {

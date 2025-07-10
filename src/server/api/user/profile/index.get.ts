@@ -16,7 +16,7 @@ export default defineEventHandler(async (event) => {
   // --- Start of added/modified logic ---
 
   // Get lcUsername from query parameters
-  const { lcUsername } = getQuery(event);
+  const { lcUsername, username } = getQuery(event);
   if (typeof lcUsername !== 'string' || !lcUsername.trim()) {
     throw createError({
       statusCode: 400,
@@ -48,31 +48,14 @@ export default defineEventHandler(async (event) => {
 
   try {
     // Pass lcUsername to getLeetcodeProfile for the profile call
-    const profileResponse = await getLeetcodeProfile(event, 'getUserProfile', lcUsername); // <-- Pass lcUsername here
+    const profileResponse = await getLeetcodeProfile(event, 'getUserProfile'); // <-- Pass lcUsername here
     leetcodeProfile = profileResponse.data;
 
-    // --- Start of new logic to save avatar ---
-    const userAvatarUrl = leetcodeProfile?.matchedUser?.profile?.userAvatar;
-    if (userId && userAvatarUrl) {
-      try {
-        await prisma.user.update({
-          where: { id: userId },
-          data: { userAvatar: userAvatarUrl },
-        });
-        console.log(`Successfully updated user ${userId}'s avatar with: ${userAvatarUrl}`);
-      } catch (dbError) {
-        console.error(`Failed to update user ${userId}'s avatar in DB:`, dbError);
-        // Do not throw error here; allow the main profile fetch to succeed
-      }
-    }
-    // --- End of new logic to save avatar ---
-
-
     // Pass lcUsername to subsequent getLeetcodeProfile calls as well
-    const langResponse = await getLeetcodeProfile(event, 'getUserLangProblemsCount', lcUsername); // <-- Pass lcUsername here
+    const langResponse = await getLeetcodeProfile(event, 'getUserLangProblemsCount');
     languageProfile = langResponse.data?.matchedUser?.languageProblemCount || [];
 
-    const submissionResponse = await getLeetcodeProfile(event, 'getUserActiveDays', lcUsername); // <-- Pass lcUsername here
+    const submissionResponse = await getLeetcodeProfile(event, 'getUserActiveDays');
     submissionProfile = submissionResponse.data?.matchedUser?.userCalendar || {};
 
   } catch (error: any) {

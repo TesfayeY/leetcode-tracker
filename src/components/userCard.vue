@@ -4,6 +4,7 @@
     <template #header>
       <div class="flex flex-row justify-start gap-4">
         <p class="text-left text-3xl">Leetcode Profile {{ viewYear }}</p>
+        <span v-if="isProfileVerified" class="bg-blue-100 text-blue-800 text-xs px-2 py-1 h-fit rounded">Verified</span>
         <UButton 
           v-bind:disabled="viewYear === activeYears[activeYears.length - 1] || activeYears.length === 0" 
           @click="handleYearChange(true)"
@@ -102,10 +103,11 @@ import { ref, reactive, defineProps, watch, onMounted, toRaw } from 'vue';
 import { useErrorLogger } from '../composables/useErrorLogger';
 
 const { reportError } = useErrorLogger();
-const props = defineProps(['lcUsername', 'username']);
+const props = defineProps(['lcUsername', 'username', 'isProfileVerified']);
 const token = useCookie('token');
 const lcUsername = ref(props.lcUsername);
 const username = ref(props.username);
+const isProfileVerified = ref(props.isProfileVerified)
 const isLoadingState = ref(true);
 const isLoadingCalendar = ref(true);
 const viewYear = ref(new Date().getFullYear());
@@ -157,6 +159,10 @@ watch(() => props.lcUsername, async (updateValue: string) => {
   isLoadingState.value = false;
 });
 
+watch(() => props.isProfileVerified, async (updateValue: boolean) => {
+  isProfileVerified.value = updateValue;
+});
+
 const handleYearChange = async (isBack: boolean) => {
   viewYear.value = isBack ? viewYear.value - 1 : viewYear.value === new Date().getFullYear() ? viewYear.value : viewYear.value + 1;
 
@@ -168,7 +174,7 @@ async function fetchUserProfile() {
   isLoadingCalendar.value = true;
 
   try {
-    const response = await $fetch(`/api/user/profile?lcUsername=${lcUsername.value}&year=${viewYear.value}`, {
+    const response = await $fetch(`/api/user/profile?lcUsername=${lcUsername.value}&year=${viewYear.value}&username=${username.value}`, {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',
@@ -180,8 +186,7 @@ async function fetchUserProfile() {
       userData.value = response.data;
       activeYears.value = toRaw(userData.value.matchedUser.userCalendar.activeYears);
     }
-
-    //console.log(toRaw(userData.value));
+    
     isLoadingCalendar.value = false;
   } catch (error: any ) {
     reportError(error, { section : `users/${username.value}`});
