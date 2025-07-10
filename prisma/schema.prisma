@@ -19,7 +19,7 @@ model User {
   email    String  @unique @db.VarChar(320)
   password String
   lcUsername String @db.VarChar(240) @default("")
-  lcSessionToken String @default("")
+  lcSessionToken String @db.Text @default("")
   userAvatar      String? 
   inboxSender    Inbox[] @relation("sender")
   inboxrecipient Inbox[] @relation("recipient")
