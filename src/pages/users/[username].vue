@@ -47,7 +47,6 @@ import UserCard from '../../components/userCard.vue';
 
 const { reportError } = useErrorLogger();
 const route = useRoute();
-const config = useRuntimeConfig(); 
 const username = ref(route.params.username);
 const errorInfo = ref({});
 const token = useCookie('token') ;
@@ -102,7 +101,7 @@ const handleLinkProfile = async () => {
 const handleValidateProfile = async (modalValue: string) => {
   // Validate the profile by calling for global state data
   try {
-    const response = await $fetch(`/api/user/profile/validate?lcUsername=${lcUsername.value}`, {
+    const response = await $fetch(`/api/user/profile/validate?lcUsername=${lcUsername.value}&username=${username.value}`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -130,7 +129,7 @@ const handleInputFormModal = async (modalValue: string) => {
   if (modalValue !== "") {
     // Check and Apply to persistent layer
     try {
-      const data = await $fetch('/api/user/profile', {
+      const data = await $fetch(`/api/user/profile?username=${username.value}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

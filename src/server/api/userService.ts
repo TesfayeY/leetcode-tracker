@@ -2,28 +2,29 @@ import { readBody, parseCookies, H3Event, getQuery } from 'h3';
 import bcrypt from 'bcrypt';
 import prisma from '../../database/db';
 import { createJwtToken, extractUserIdFromToken } from '../../jwt';
+import { checkSelf } from '../utils/checkSelf';
 
 export async function getUserData(event: H3Event) {
   const cookies = parseCookies(event);
   const extractedUserId = await extractUserIdFromToken(cookies.token);
   const userId = extractedUserId !== null ? extractedUserId : undefined;
   const queryParams = getQuery(event);
+	const username = queryParams.username.toString();
 
-  const username = queryParams.username.toString()
-  let isSelf = true;
+  const isSelf = await checkSelf(username, userId);
+
+  const user = await prisma.user.findUnique({ 
+    where: { 
+      email: username
+    } 
+  });
+
+  if (!user) {
+      throw createError({statusCode: 401, statusMessage:'Invalid user'});
+  }
 
   if (userId === undefined) {
     throw createError({statusCode: 401, statusMessage:'Invalid user'});
-  }
-
-  const user = await prisma.user.findUnique({ where: { email: username } });
-
-  if (!user) {
-    throw createError({statusCode: 401, statusMessage:'Invalid user'});
-  }
-  
-  if (userId !== user.id) {
-    isSelf = false;
   }
 
   return { 

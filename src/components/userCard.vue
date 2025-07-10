@@ -174,7 +174,7 @@ async function fetchUserProfile() {
   isLoadingCalendar.value = true;
 
   try {
-    const response = await $fetch(`/api/user/profile?lcUsername=${lcUsername.value}&year=${viewYear.value}`, {
+    const response = await $fetch(`/api/user/profile?lcUsername=${lcUsername.value}&year=${viewYear.value}&username=${username.value}`, {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',
@@ -186,8 +186,7 @@ async function fetchUserProfile() {
       userData.value = response.data;
       activeYears.value = toRaw(userData.value.matchedUser.userCalendar.activeYears);
     }
-
-    //console.log(toRaw(userData.value));
+    
     isLoadingCalendar.value = false;
   } catch (error: any ) {
     reportError(error, { section : `users/${username.value}`});
