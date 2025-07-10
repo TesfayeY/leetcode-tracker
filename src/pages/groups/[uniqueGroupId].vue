@@ -1,5 +1,12 @@
 <template>
   <div class="p-4">
+    
+    <div class="mb-6">
+      <UButton variant="ghost" @click="router.push('/welcome')" class="px-4">
+        ← Back to Welcome
+      </UButton>
+    </div>
+
     <!-- Loading State -->
     <div v-if="loading" class="text-center text-gray-500 dark:text-gray-400 py-10">
       <p>Loading group details...</p>
@@ -13,9 +20,9 @@
           <h1 class="text-2xl font-bold text-gray-900 dark:text-white">
             {{ group?.groupName }}
           </h1>
-          <p class="text-gray-500 dark:text-gray-400 mt-1">
-            {{ group?.description || 'No description.' }}
-          </p>
+          <!-- <p v-if="group?.description" class="text-gray-500 dark:text-gray-400 mt-1">
+            {{ group.description }}
+          </p> -->
         </div>
         <div class="w-fit flex flex-col space-y-2">
           <UButton @click="showInviteDialog = true" class="w-full justify-center">
@@ -89,9 +96,15 @@
           v-for="user in group?.users || []"
           :key="user.id"
           variant="subtle"
-          class="cursor-pointer hover:shadow-lg transition"
+          class="relative cursor-pointer hover:shadow-lg transition"
           @click="viewProfile(user)"
         >
+          <!-- “You” badge for current user -->
+          <span
+            v-if="user.id === currentUserId"
+            class="absolute top-2 right-2 bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded"
+          >You</span>
+
           <template #header>
             <h4 class="text-xl font-medium">{{ user.name }}</h4>
           </template>
@@ -123,16 +136,31 @@ interface Group {
   users:       User[]
 }
 
-const route             = useRoute()
-const router            = useRouter()
-const uniqueGroupId     = route.params.uniqueGroupId as string
+const route          = useRoute()
+const router         = useRouter()
+const uniqueGroupId  = route.params.uniqueGroupId as string
 
-const loading           = ref(true)
-const group             = ref<Group | null>(null)
-const showInviteDialog  = ref(false)
-const showLeaveGroup    = ref(false)
-const inviteUsername    = ref('')
-const usersToInvite     = ref<{ name: string }[]>([])
+const loading          = ref(true)
+const group            = ref<Group | null>(null)
+const showInviteDialog = ref(false)
+const showLeaveGroup   = ref(false)
+const inviteUsername   = ref('')
+const usersToInvite    = ref<{ name: string }[]>([])
+const currentUserId    = ref<number | null>(null)
+
+// Decode JWT from cookie to get current user's ID
+if (process.client) {
+  const match = document.cookie.match(/token=([^;]+)/)
+  if (match) {
+    try {
+      const token = match[1]
+      const payload = JSON.parse(atob(token.split('.')[1]))
+      currentUserId.value = payload.userId
+    } catch (e) {
+      console.error('Failed to decode token payload:', e)
+    }
+  }
+}
 
 onMounted(async () => {
   try {
@@ -163,14 +191,18 @@ function sendBulkInvites() {
   usersToInvite.value    = []
 }
 
-function confirmLeaveGroup() {
-  console.log('Leaving:', uniqueGroupId)
-  // TODO: call leave API
-  showLeaveGroup.value = false
-  router.push('/groups')
-}
+async function confirmLeaveGroup() {
+    try {
+      await $fetch(`/api/groups/${uniqueGroupId}/leave`, { method: 'DELETE' })
+      router.push('/welcome')
+    } catch (e) {
+      console.error('Leave failed', e)
+    } finally {
+      showLeaveGroup.value = false
+    }
+  }
 
 function viewProfile(user: User) {
-  router.push(`/users/${user.lc_username}`)
+  router.push(`/users/${user.name}`)
 }
 </script>
