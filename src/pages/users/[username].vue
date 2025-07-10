@@ -14,17 +14,18 @@
     </div>
   </div>
   <InputModal 
-    v-if="isInputModalOpen" 
+    :isOpen="isInputModalOpen" 
     :errorInfo="errorInfo"
     :title="modalTitle"
+    :description="'Ensure the username is owned by you!'"
     @close-modal="closeModal" 
     @submit-form="handleInputFormModal"
   ></InputModal>
   <InputModal 
-    v-if="isLinkModalOpen" 
+    :isOpen="isLinkModalOpen" 
     :errorInfo="errorInfo"
     :title="modalTitle"
-    :description="'You can obtain the Leetcode Session by login to Leetcode and open Browser Inspection, navigate to Application tab, then click on the Cookies dropdown. Do not share this token!'"
+    :description="LEETCODE_SESSION_INSTRUCTION"
     :placeholder="'Leetcode Session Token'"
     @close-modal="closeModal" 
     @submit-form="handleValidateProfile"
@@ -35,6 +36,7 @@
 import { useRoute } from 'vue-router';
 import { ref, onMounted } from 'vue';
 import { useErrorLogger } from '../../composables/useErrorLogger';
+import { LEETCODE_SESSION_INSTRUCTION } from '~/constants/appConst';
 import InputModal from '../../components/inputModal.vue';
 import UserCard from '../../components/userCard.vue';
 
@@ -56,7 +58,7 @@ const openModal = (title: string) => {
 }
 
 const closeModal = () => {
-  errorInfo.value = null;;
+  errorInfo.value = null;
   isInputModalOpen.value = false;
   isLinkModalOpen.value = false;
   modalTitle.value = '';

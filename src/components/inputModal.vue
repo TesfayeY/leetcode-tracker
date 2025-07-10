@@ -1,25 +1,30 @@
 <template>
-    <div class="fixed top-0 bottom-0 left-0 right-0 flex justify-center items-center bg-[#000000da]">
-      <div class="modal rounded-lg bg-[#363636] to-10% p-5 h-fit w-[500px] text-left">
-        <div class="text-left text-2xl">{{ modalTitle }}</div>
-        <p v-if="description !== ''" class="text-left text-sm italic ml-5 mr-5 mt-2">{{ description }}</p>
-        <UFormGroup class="mt-5">
-          <UInput v-model="inputField" type="text" :placeholder="placeholder"></UInput>
-        </UFormGroup>
-        <p v-if="errorInfo !== null" class="font-bold mt-2" style="color: red;">{{ errorInfo.statusMessage }}</p>
-        <div class="mt-5 flex flex-end gap-4">
-          <UButton v-bind:disabled="inputField === ''" class="p-2 px-3 text-md" type="submit" @click="sendFormToParent">Submit</UButton>
-          <UButton class="p-2 px-3 text-md" @click="closeModal">Close</UButton>
+  <UModal v-model="isOpen">
+    <UCard>
+      <template #header>
+        <h3 class="text-lg font-semibold">{{ modalTitle }}</h3>
+      </template>
+      <p v-if="description !== null" class="text-left text-sm italic">{{ description }}</p>
+      <UFormGroup class="mt-5">
+        <UInput v-model="inputField" type="text" :placeholder="placeholder"></UInput>
+      </UFormGroup>
+      <p v-if="errorInfo !== null" class="font-bold mt-5" style="color: red;">{{ errorInfo.statusMessage }}</p>
+      <template #footer>
+        <div class="flex justify-end space-x-2">
+          <UButton @click="closeModal" variant="ghost">Cancel</UButton>
+          <UButton color="green" @click="sendFormToParent">Submit</UButton>
         </div>
-      </div>
-    </div>
+      </template>
+    </UCard>
+  </UModal>
 </template>
 
 <script setup lang="ts">
 import { ref, defineProps, watch } from 'vue';
 
-const props = defineProps(['title', 'description', 'placeholder', 'errorInfo']);
+const props = defineProps(['isOpen', 'title', 'description', 'placeholder', 'errorInfo']);
 const inputField = ref('');
+const isOpen = ref(props.isOpen);
 const modalTitle = ref(props.title);
 const errorInfo = ref(props.errorInfo);
 const description = ref(props.description);
@@ -32,14 +37,22 @@ const sendFormToParent = () => {
 }
 
 const closeModal = () => {
-  emit('close-modal')
+  isOpen.value = false;
+  emit('close-modal');
 }
 
+// Reason why we don't do watcher on list because it will trigger on OR condition and updated every other values, not individually
+watch(() => props.title, (updateValue: string) => {
+  modalTitle.value = updateValue;
+});
+
+watch(() => props.isOpen, (updateValue: boolean) => {
+  isOpen.value = updateValue;
+});
+
 watch(() => props.errorInfo, (updateValue: any) => {
-  errorInfo.value = updateValue
+  errorInfo.value = updateValue;
+
 });
 
 </script>
-
-<style scoped>
-</style>

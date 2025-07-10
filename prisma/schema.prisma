@@ -18,10 +18,12 @@ model User {
   name     String
   email    String  @unique @db.VarChar(320)
   password String
-  lc_username String @db.VarChar(240) @default("")
+  lcUsername String @db.VarChar(240) @default("")
+  lcSessionToken String @default("")
   userAvatar      String? 
   inboxSender    Inbox[] @relation("sender")
   inboxrecipient Inbox[] @relation("recipient")
+  isProfileVerified Boolean @default(false) // for leetcode profile verification
   // New: to define the relation to the group
   groups      Group[] // A user can belong to many groups
 }
@@ -50,7 +52,7 @@ model Inbox {
 
 enum Acknowledgement {
   ACCEPT
-  DENY
+  ARCHIVED
   VIEWED
   RECEIVED
 }

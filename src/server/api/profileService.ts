@@ -64,7 +64,7 @@ export async function addLeetcodeUsername(event: H3Event, queryFile: any) {
       throw createError({statusCode: 404, statusMessage: "Leetcode user not found" });
     }
     
-    await prisma.user.update({ where: { id: userId }, data: { lc_username: newUserName } });
+    await prisma.user.update({ where: { id: userId }, data: { lcUsername: newUserName } });
 
     return { message: 'User Profile added successfully' };
 
