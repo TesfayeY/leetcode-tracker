@@ -10,7 +10,7 @@
         <UButton
           @click="openCreateGroupModal"
           class="rounded-lg shadow-md
-                text-white text-center px-5"
+                text-white text-center text-md p-2 px-3"
         >
           Create Group
         </UButton>
@@ -19,7 +19,7 @@
           @click="openJoinGroupModal"
           class="rounded-lg shadow-md
                 text-white border 
-                text-center px-5"
+                text-center text-md p-2 px-3"
         >
           Join Group
         </UButton>

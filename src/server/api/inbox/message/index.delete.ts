@@ -1,12 +1,12 @@
 import { defineEventHandler } from 'h3';
-import { updateUserInbox } from '../inboxService';
+import { deleteUserInbox } from '../../inboxService';
 
 export default defineEventHandler(async (event) => {
-  if (event.req.method !== 'POST') {
+  if (event.req.method !== 'DELETE') {
     event.res.statusCode = 405;
     console.log('Method not allowed');
     return { message: 'Method not allowed' };
   }
 
-  return updateUserInbox(event);
+  return deleteUserInbox(event);
 });
