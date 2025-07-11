@@ -58,6 +58,9 @@ export default defineEventHandler(async (event) => {
           email: email,
           password: hashedPassword,
           lcUsername: "",
+          userPreference: {
+            create: [{}]
+          }
         }
       });
 

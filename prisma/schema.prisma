@@ -26,6 +26,7 @@ model User {
   isProfileVerified Boolean @default(false) // for leetcode profile verification
   // New: to define the relation to the group
   groups      Group[] // A user can belong to many groups
+  userPreference  Preference[] @relation("userPreference")
 }
 
 
@@ -45,9 +46,40 @@ model Inbox {
   senderId      Int 
   recipient     User    @relation("recipient", fields: [recipientId], references: [id])
   recipientId   Int
-  context       String
+  context       String  @db.TinyText @default("")
   isInvitation  Boolean
   acknowledgement Acknowledgement @default(RECEIVED)
+}
+
+model Preference {
+  id                  Int     @id @default(autoincrement())
+  user                User    @relation("userPreference", fields: [userId], references: [id])
+  userId              Int     @unique
+  //All notifications
+  isNotify            Boolean @default(true)
+  //Only auto notifications: streak, check in today, daily problem
+  isAutoNotify        Boolean @default(true)
+  isInboxNotify       Boolean @default(true)
+  isEmailNotify       Boolean @default(false)   //Email is default false since user need to verify it first
+  //Only auto notifications above and messages and invitation
+  isWebPushNotify     Boolean @default(true)
+  //Auto Notification individually
+  isStreakNotify      Boolean @default(true)
+  isCheckinNotify     Boolean @default(true)
+  isProblemNotify     Boolean @default(true)
+  //The Message and Invitation itself individually
+  isInboxMessage      Boolean @default(true)
+  isEmailMessage      Boolean @default(false)   //Email is default false since user need to verify it first
+  //Message and Invitation to Web push individually
+  isWebPushMessage     Boolean @default(true)
+  //Date time for auto notification to trigger
+  autoStreakDatetime  DateTime @default(now())
+  autoCheckinDatetime DateTime @default(now())
+  autoProblemDatetime DateTime @default(now())
+  //Interval of auto notification between any two triggers
+  autoStreakInterval  NotificationInterval @default(HOURLY)
+  autoCheckinInterval NotificationInterval @default(HOURLY)
+  autoProblemInterval NotificationInterval @default(FULL_DAY)
 }
 
 enum Acknowledgement {
@@ -55,4 +87,14 @@ enum Acknowledgement {
   ARCHIVED
   VIEWED
   RECEIVED
+}
+
+// Prisma is currently having a bug on this mapping. It may be resolved in the near future
+// but the current resolution is to introduce a similar mapping on the client side
+enum NotificationInterval {
+  HOURLY            @map("1")
+  EIGTH_DAY         @map("4")
+  QUARTER_DAY       @map("6")
+  HALF_DAY          @map("12")
+  FULL_DAY          @map("24")
 }

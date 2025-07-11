@@ -1,6 +1,75 @@
 <template>
   <div class="mr-4">
     <UTabs :items="items" class="w-full">
+      <!-- Preference settings form -->
+      <template #Preferences="{ item }">
+        <UCard>
+          <template #header>
+            <p class="text-base font-semibold leading- text-gray-900 dark:text-white">
+              {{ item.label }}
+            </p>
+            <p class="mb-5 text-sm text-gray-500 dark:text-gray-400">
+              Change your notification and inbox preferences here
+            </p>
+          </template>
+          <div class="flex flex-col gap-5">
+            <div class="flex flex row justify-between">
+              <p>All Notifications</p>
+              <UToggle v-model="isAllSelected" @change="handleAllToggle"></UToggle>
+            </div>
+            <UDivider></UDivider>
+            <div class="flex flex row justify-between">
+              <p>Auto Notifications</p>
+              <UToggle v-model="isAutoSelected" @change="handleAutoToggle"></UToggle>
+            </div>
+            <div class="flex flex row justify-between ml-10">
+              <p>Streak Days</p>
+              <UToggle v-model="isStreakSelected" @change="handleIndividualToggle('isStreakNotify', isStreakSelected)"></UToggle>
+            </div>
+            <div class="flex flex row justify-between ml-10">
+              <p>Check In Today</p>
+              <UToggle v-model="isCheckInSelected" @change="handleIndividualToggle('isCheckinNotify', isCheckInSelected)"></UToggle>
+            </div>
+            <div class="flex flex row justify-between ml-10">
+              <p>Daily Leetcode Problem</p>
+              <UToggle v-model="isDailySelected" @change="handleIndividualToggle('isProblemNotify', isDailySelected)"></UToggle>
+            </div>
+            <UDivider></UDivider>
+            <div class="flex flex row justify-between">
+              <p>Notification Delivery Methods</p>
+            </div>
+            <div class="flex flex row justify-between ml-10">
+              <p>Push to Inbox</p>
+              <UToggle v-model="isInboxSelected" @change="handleIndividualToggle('isInboxNotify', isInboxSelected)"></UToggle>
+            </div>
+            <div class="flex flex row justify-between ml-10">
+              <p>Push to Email</p>
+              <UToggle v-model="isEmailSelected" @change="handleIndividualToggle('isEmailNotify', isEmailSelected)"></UToggle>
+            </div>
+            <div class="flex flex row justify-between ml-10">
+              <p>Push to Browser Popup</p>
+              <UToggle v-model="isWebPushSelected" @change="handleIndividualToggle('isWebPushNotify', isWebPushSelected)"></UToggle>
+            </div>
+            <UDivider></UDivider>
+            <div class="flex flex row justify-between">
+              <p>Messages Delivery Methods</p>
+            </div>
+            <div class="flex flex row justify-between ml-10">
+              <p>Send to Inbox</p>
+              <UToggle v-model="isInboxMessageSelected" @change="handleIndividualToggle('isInboxMessage', isInboxMessageSelected)"></UToggle>
+            </div>
+            <div class="flex flex row justify-between ml-10">
+              <p>Send to Email</p>
+              <UToggle v-model="isEmailMessageSelected" @change="handleIndividualToggle('isEmailMessage', isEmailMessageSelected)"></UToggle>
+            </div>
+            <div class="flex flex row justify-between ml-10">
+              <p>Send to Browser Popup</p>
+              <UToggle v-model="isWebPushMessageSelected" @change="handleIndividualToggle('isWebPushMessage', isWebPushMessageSelected)"></UToggle>
+            </div>
+          </div>
+        </UCard>
+      </template>
+
       <!-- Name settings form -->
       <template #Name="{ item }">
         <UCard @submit.prevent="onSubmitName">
@@ -127,7 +196,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive } from 'vue';
+import { ref, reactive, onBeforeMount } from 'vue';
 import { useRouter } from 'vue-router';
 import { consola } from "consola";
 import * as Sentry from "@sentry/nuxt";
@@ -140,6 +209,7 @@ definePageMeta({
 });
 
 const items = [
+  { slot: 'Preferences', label: 'Preferences'},
   { slot: 'Name', label: 'Display Name' },
   { slot: 'Email', label: 'Email' },
   { slot: 'password', label: 'Password' },
@@ -163,7 +233,36 @@ const nameError = ref<string | null>(null);
 const passwordError = ref<string | null>(null);
 const deletionError = ref<string | null>(null);
 
+// Preference variables. Prefer individual rather than object for separations of control
+const isAllSelected = ref(true);
+const isAutoSelected = ref(true);
+const isStreakSelected = ref(true);
+const isCheckInSelected = ref(true);
+const isDailySelected = ref(true);
+const isInboxSelected = ref(true);
+const isEmailSelected = ref(false);
+const isWebPushSelected = ref(true);
+const isInboxMessageSelected = ref(true);
+const isEmailMessageSelected = ref(false);
+const isWebPushMessageSelected = ref(true);
+
 const token = useCookie('token') ;
+
+onBeforeMount(async () => {
+  try {
+    const response = await $fetch(`api/user/preference`, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`,
+      }
+    });
+
+    assignPreferences(response);
+  } catch(error: any) {
+    reportError(error,{ section : 'settings/Name'});
+  }
+});
 
 async function onSubmitName() {
   
@@ -268,6 +367,111 @@ async function onDeleteAccount() {
   } catch (error: any) {
     deletionError.value = error.statusMessage;
     reportError(error, {section: 'settings/delete'});
+  }
+}
+
+const handleAllToggle = async () => {
+  //All notification captures all other ones
+  isAutoSelected.value = isAllSelected.value;
+  isStreakSelected.value = isAllSelected.value;
+  isCheckInSelected.value = isAllSelected.value;
+  isDailySelected.value = isAllSelected.value;
+  isInboxSelected.value = isAllSelected.value;
+  isEmailSelected.value = isAllSelected.value;
+  isWebPushSelected.value = isAllSelected.value;
+  isInboxMessageSelected.value = isAllSelected.value;
+  isEmailMessageSelected.value = isAllSelected.value;
+  isWebPushMessageSelected.value = isAllSelected.value;
+
+  try {
+    const response = await $fetch(`api/user/preference`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`,
+      },
+      body: {
+        isNotify: isAllSelected.value,
+        isAutoNotify: isAutoSelected.value,
+        isStreakNotify: isStreakSelected.value,
+        isCheckinNotify: isCheckInSelected.value,
+        isProblemNotify: isDailySelected.value,
+        isInboxNotify: isInboxSelected.value,
+        isEmailNotify: isEmailSelected.value,
+        isWebPushNotify: isWebPushSelected.value,
+        isWebPushMessage: isWebPushMessageSelected.value,
+        isInboxMessage: isInboxMessageSelected.value,
+        isEmailMessage: isEmailMessageSelected.value,
+      }
+    });
+
+    assignPreferences(response);
+
+  } catch (error: any) {
+    reportError(error, {section: 'settings/preferences'});
+  }
+}
+
+const handleAutoToggle = async () => {
+  isStreakSelected.value = isAutoSelected.value;
+  isCheckInSelected.value = isAutoSelected.value;
+  isDailySelected.value = isAutoSelected.value;
+
+  try {
+    const response = await $fetch(`api/user/preference`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`,
+      },
+      body: {
+        isAutoNotify: isAutoSelected.value,
+        isStreakNotify: isStreakSelected.value,
+        isCheckinNotify: isCheckInSelected.value,
+        isProblemNotify: isDailySelected.value,
+      }
+    });
+
+    assignPreferences(response);
+  } catch (error: any) {
+    reportError(error, {section: 'settings/preferences'});
+  }
+}
+
+const handleIndividualToggle = async (type: string, value: boolean) => {
+  try {
+    const response = await $fetch(`api/user/preference`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`,
+      },
+      body: {
+        notificationType: type,
+        value: value
+      }
+    });
+
+    assignPreferences(response);
+  } catch (error: any) {
+    reportError(error, {section: 'settings/preferences'});
+  }
+}
+
+// This will assign all the toggles bases on the user saved preferences.
+function assignPreferences(response: any) {
+  if (response !== null) {
+    isAllSelected.value = response.data.isNotify ?? isAllSelected.value;
+    isAutoSelected.value = response.data.isAutoNotify ?? isAutoSelected.value;
+    isStreakSelected.value = response.data.isStreakNotify ?? isStreakSelected.value;
+    isCheckInSelected.value = response.data.isCheckinNotify ?? isCheckInSelected.value;
+    isDailySelected.value = response.data.isProblemNotify ?? isDailySelected.value;
+    isInboxSelected.value = response.data.isInboxNotify ?? isInboxSelected.value;
+    isEmailSelected.value = response.data.isEmailNotify ?? isEmailSelected.value;
+    isWebPushSelected.value = response.data.isWebPushNotify ?? isWebPushSelected.value;
+    isWebPushMessageSelected.value = response.data.isWebPushMessage ?? isWebPushMessageSelected.value;
+    isInboxMessageSelected.value = response.data.isInboxMessage ?? isInboxMessageSelected.value;
+    isEmailMessageSelected.value = response.data.isEmailMessage ?? isEmailMessageSelected.value;
   }
 }
 
