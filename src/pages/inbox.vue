@@ -32,13 +32,13 @@
       <template #header>
         <h3 class="text-lg font-semibold">Send Message</h3>
       </template>
-      <UFormGroup >
+      <UFormGroup required>
         <div class="flex flex-row gap-4">
           <p class="text-lg">To: </p>
-          <UInput v-model="userInputField" type="text" class="mb-2 w-full"></UInput>
+          <UInput v-model="userInputField" type="text" required class="mb-2 w-full"></UInput>
         </div>
-        <UDivider size="sm" class="mt-2 w-full"></UDivider>
-        <UTextarea v-model="messageInputField" size="xl" variant="outline" placeholder="Message..." class="mt-2"></UTextarea>
+        <UDivider size="sm"  class="mt-2 w-full"></UDivider>
+        <UTextarea v-model="messageInputField" size="xl" variant="outline" placeholder="Message..." required class="mt-2"></UTextarea>
       </UFormGroup>
       <p v-if="errorInfo !== null" class="font-bold mt-5" style="color: red;">{{ errorInfo.statusMessage }}</p>
       <template #footer>
@@ -240,13 +240,16 @@ const handleDeleteInbox = async () => {
 
 const handleSendMessage = async () => {
   try {
+    if (messageInputField.value.length === 0) {
+      throw createError({ statusCode: 400, statusMessage: 'Message must not be empty' })
+    }
+    
     await fetchUserMessage('POST', null, {
       recipientUsername: userInputField.value,
       messageContent: messageInputField.value,
       isInvitation: false
     });
-
-    closeModal();
+    
   } catch(error: any) {
     errorInfo.value = error;
   }
@@ -277,7 +280,6 @@ async function fetchUserInbox() {
 
 async function fetchUserMessage(method: 'POST' | 'GET' | 'PUT' | 'DELETE', inbox: any, body: any = {}) {
   const inboxId = inbox !== null ? inbox.id : 0;
-  console.log()
 
   try {
     const response = await $fetch(`api/inbox/message?inboxId=${inboxId}`, {
@@ -294,6 +296,7 @@ async function fetchUserMessage(method: 'POST' | 'GET' | 'PUT' | 'DELETE', inbox
     }
 
     inboxes.value = response.data;
+    closeModal();
   }
   catch (error: any) {
     errorInfo.value = error;
