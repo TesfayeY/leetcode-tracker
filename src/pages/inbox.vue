@@ -44,10 +44,42 @@
       <template #footer>
         <div class="flex justify-end space-x-2">
           <UButton @click="closeModal" variant="ghost">Cancel</UButton>
-          <UButton v-bind:disabled="messageInputField.length === 0 && userInputField.length === 9" color="green" @click="">Send</UButton>
+          <UButton v-bind:disabled="messageInputField.length === 0 && userInputField.length === 9" color="green" @click="handleSendMessage">Send</UButton>
         </div>
       </template>
     </UCard>
+  </UModal>
+
+  <!-- Confirmation Modal-->
+  <UModal v-model="isReadMessageModalOpen">
+    <ConfirmationModal
+      :title="'Mark Message as Read'"
+      :description="'Are you sure to mark this message?'"
+      :happyPathButtonName="'Mark'"
+      @close-modal="closeModal"
+      @submit="handleReadInbox"
+    >
+    </ConfirmationModal>
+  </UModal>
+  <UModal v-model="isArchivedMessageModalOpen">
+    <ConfirmationModal
+      :title="'Archive Message'"
+      :description="'Are you sure to archive this message?'"
+      :happyPathButtonName="'Archive'"
+      @close-modal="closeModal"
+      @submit="handleArchiveInbox"
+    >
+    </ConfirmationModal>
+  </UModal>
+  <UModal v-model="isDeleteMessageModalOpen">
+    <ConfirmationModal
+      :title="'Delete Message'"
+      :description="'Are you sure to delete this message?'"
+      :happyPathButtonName="'Delete'"
+      @close-modal="closeModal"
+      @submit="handleDeleteInbox"
+    >
+    </ConfirmationModal>
   </UModal>
 </template>
 
@@ -55,6 +87,7 @@
 import { ref, onBeforeMount } from 'vue';
 import { NUM_INBOX_DEFAULT_DISPLAY } from '~/constants/appConst';
 import { useErrorLogger } from '~/composables/useErrorLogger';
+import ConfirmationModal from '~/components/confirmationModal.vue';
 
 const { reportError }= useErrorLogger();
 const token = useCookie('token');
@@ -64,7 +97,11 @@ const pageCount = NUM_INBOX_DEFAULT_DISPLAY;
 const userInputField = ref('');
 const messageInputField = ref('');
 const errorInfo = ref({});
+const currentMessage = ref(null);
 const isMessageModalOpen = ref(false);
+const isDeleteMessageModalOpen = ref(false);
+const isArchivedMessageModalOpen = ref(false);
+const isReadMessageModalOpen = ref(false);
 
 const inboxes = reactive([
   {
@@ -81,7 +118,7 @@ const columns = ref([
   {
     key: 'sender.name',
     label: 'From',
-    class: 'w-[10vw]'
+    class: 'w-[10vw]',
   },
   {
     key: 'context',
@@ -125,37 +162,104 @@ const actionItems = (row: any) => [
   {
     label: 'Mark as Read',
     icon: 'i-heroicons-eye-20-solid',
-    click: () => handleReadInbox(row),
+    click: () => {
+      isReadMessageModalOpen.value = true;
+      currentMessage.value = row;
+    },
     disabled: row.acknowledgement === 'VIEWED'
   },  
   {
     label: 'Archive',
     icon: 'i-heroicons-archive-box-20-solid',
-    click: () => handleArchiveInbox(row),
+    click: () => {
+      isArchivedMessageModalOpen .value = true;
+      currentMessage.value = row;
+    },
     disabled: row.acknowledgement === 'ARCHIVED'
   }, 
   {
     label: 'Delete',
     icon: 'i-heroicons-trash-solid',
-    click: () => handleDeleteInbox(row)
+    click: () => {
+      isDeleteMessageModalOpen.value = true;
+      currentMessage.value = row;
+    }
   }]
 ];
 
 const closeModal = () => {
   userInputField.value = '';
   messageInputField.value = '';
+  currentMessage.value = null;
   errorInfo.value = null;
   isMessageModalOpen.value = false;
+  isDeleteMessageModalOpen.value = false;
+  isArchivedMessageModalOpen.value = false;
+  isReadMessageModalOpen.value = false;
 }
 
 onBeforeMount(async () => {
+  await fetchUserInbox();
+});
+
+const handleAcceptInvitation = (inbox: any) => {
+  console.log(inbox);
+}
+
+const handleReadInbox = async () => {
+  const requestBody = {
+    acknowledgement: 'VIEWED'
+  };
+
+  if (currentMessage.value !== null) {
+    await fetchUserMessage('PUT', toRaw(currentMessage.value), requestBody);
+    currentMessage.value = null;
+    closeModal();
+  }
+}
+
+const handleArchiveInbox = async () => {
+  const requestBody = {
+    acknowledgement: 'ARCHIVED'
+  };
+
+  if (currentMessage.value !== null) {
+    await fetchUserMessage('PUT', toRaw(currentMessage.value), requestBody);
+    currentMessage.value = null;
+    closeModal();
+  }
+}
+
+const handleDeleteInbox = async () => {
+  if (currentMessage.value !== null) {
+    await fetchUserMessage('DELETE', toRaw(currentMessage.value));
+    currentMessage.value = null;
+    closeModal();
+  }
+}
+
+const handleSendMessage = async () => {
+  try {
+    await fetchUserMessage('POST', null, {
+      recipientUsername: userInputField.value,
+      messageContent: messageInputField.value,
+      isInvitation: false
+    });
+
+    closeModal();
+  } catch(error: any) {
+    errorInfo.value = error;
+  }
+}
+
+async function fetchUserInbox() {
   try {
     const response = await $fetch(`api/inbox`, {
       method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`,
-        },
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`,
+      },
     });
 
     if (response === null) {
@@ -166,33 +270,17 @@ onBeforeMount(async () => {
     // console.log(toRaw(inboxes.value));
   }
   catch (error: any) {
+    errorInfo.value = error;
     reportError(error, { section : `inbox`});
   }
-});
-
-const handleAcceptInvitation = (inbox: any) => {
-  console.log(inbox);
 }
 
-const handleReadInbox = async (inbox: any) => {
-  const requestBody = {
-    acknowledgement: 'VIEWED'
-  };
-  
-  await fetchUserInbox('POST', inbox, requestBody);
-}
+async function fetchUserMessage(method: 'POST' | 'GET' | 'PUT' | 'DELETE', inbox: any, body: any = {}) {
+  const inboxId = inbox !== null ? inbox.id : 0;
+  console.log()
 
-const handleArchiveInbox = (inbox: any) => {
-  console.log(inbox);
-}
-
-const handleDeleteInbox = async (inbox: any) => {
-  await fetchUserInbox('DELETE', inbox);
-}
-
-async function fetchUserInbox(method: 'POST' | 'GET' | 'PUT' | 'DELETE', inbox: any, body: any = {}) {
   try {
-    const response = await $fetch(`api/inbox?inboxId=${inbox.id}`, {
+    const response = await $fetch(`api/inbox/message?inboxId=${inboxId}`, {
       method: method,
       headers: {
         'Content-Type': 'application/json',
@@ -208,6 +296,7 @@ async function fetchUserInbox(method: 'POST' | 'GET' | 'PUT' | 'DELETE', inbox: 
     inboxes.value = response.data;
   }
   catch (error: any) {
+    errorInfo.value = error;
     reportError(error, { section : `inbox`});
   }
 }
