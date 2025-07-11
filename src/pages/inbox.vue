@@ -1,6 +1,7 @@
 <template>
   <div class="flex flex-row justify-start gap-5 h-[5vh] items-center">
     <UButton class="p-2 px-3 text-md h-full" to="/welcome">Return</UButton>
+    <UButton class="p-2 px-3 text-md h-full" @click="isMessageModalOpen = true">Send Message</UButton>
   </div>
   <UCard class="mt-5">
     <template #header>
@@ -24,6 +25,30 @@
       </div>
     </template>
   </UCard>
+
+  <!-- Modal to Send Message to User -->
+  <UModal v-model="isMessageModalOpen">
+    <UCard>
+      <template #header>
+        <h3 class="text-lg font-semibold">Send Message</h3>
+      </template>
+      <UFormGroup >
+        <div class="flex flex-row gap-4">
+          <p class="text-lg">To: </p>
+          <UInput v-model="userInputField" type="text" class="mb-2 w-full"></UInput>
+        </div>
+        <UDivider size="sm" class="mt-2 w-full"></UDivider>
+        <UTextarea v-model="messageInputField" size="xl" variant="outline" placeholder="Message..." class="mt-2"></UTextarea>
+      </UFormGroup>
+      <p v-if="errorInfo !== null" class="font-bold mt-5" style="color: red;">{{ errorInfo.statusMessage }}</p>
+      <template #footer>
+        <div class="flex justify-end space-x-2">
+          <UButton @click="closeModal" variant="ghost">Cancel</UButton>
+          <UButton v-bind:disabled="messageInputField.length === 0 && userInputField.length === 9" color="green" @click="">Send</UButton>
+        </div>
+      </template>
+    </UCard>
+  </UModal>
 </template>
 
 <script setup lang="ts">
@@ -35,6 +60,11 @@ const { reportError }= useErrorLogger();
 const token = useCookie('token');
 const page = ref(1);
 const pageCount = NUM_INBOX_DEFAULT_DISPLAY; 
+
+const userInputField = ref('');
+const messageInputField = ref('');
+const errorInfo = ref({});
+const isMessageModalOpen = ref(false);
 
 const inboxes = reactive([
   {
@@ -107,9 +137,16 @@ const actionItems = (row: any) => [
   {
     label: 'Delete',
     icon: 'i-heroicons-trash-solid',
-    click: () => handleADeleteInbox(row)
+    click: () => handleDeleteInbox(row)
   }]
 ];
+
+const closeModal = () => {
+  userInputField.value = '';
+  messageInputField.value = '';
+  errorInfo.value = null;
+  isMessageModalOpen.value = false;
+}
 
 onBeforeMount(async () => {
   try {
@@ -149,7 +186,7 @@ const handleArchiveInbox = (inbox: any) => {
   console.log(inbox);
 }
 
-const handleADeleteInbox = async (inbox: any) => {
+const handleDeleteInbox = async (inbox: any) => {
   await fetchUserInbox('DELETE', inbox);
 }
 
