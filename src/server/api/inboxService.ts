@@ -26,6 +26,16 @@ export async function getUserInboxMessages(event: H3Event) {
   const extractedUserId = await extractUserIdFromToken(cookies.token);
   const userId = extractedUserId !== null ? extractedUserId : undefined;
 
+  const user = await prisma.user.findUnique({
+    where: {
+      id: userId
+    }
+  });
+
+  if (!user) {
+    throw createError({ statusCode: 401, statusMessage: 'Unauthorized user' });
+  }
+
   try {
     const allUserInbox = await getInboxFromUserId(userId);
 

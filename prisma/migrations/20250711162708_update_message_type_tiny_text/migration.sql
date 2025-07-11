@@ -1,0 +1,2 @@
+-- AlterTable
+ALTER TABLE `Inbox` MODIFY `context` TINYTEXT NOT NULL DEFAULT '';
