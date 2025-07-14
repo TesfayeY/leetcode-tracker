@@ -96,7 +96,7 @@ const pageCount = NUM_INBOX_DEFAULT_DISPLAY;
 
 const userInputField = ref('');
 const messageInputField = ref('');
-const errorInfo = ref({});
+const errorInfo = ref<Record<string, any>>({});
 const currentMessage = ref(null);
 const isMessageModalOpen = ref(false);
 const isDeleteMessageModalOpen = ref(false);
