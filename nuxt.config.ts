@@ -16,6 +16,10 @@ export default defineNuxtConfig({
 
   runtimeConfig: {
     jwtSecret: process.env.JWT_SECRET,
+    systemAdmin: {
+      appWorkerUsername: process.env.APP_WORKER_USERNAME,
+      appWorkerPassword: process.env.APP_WORKER_PASSWORD,
+    },
     public: {
       sentry: {
         dsnClient: process.env.SENTRY_DSN_FRONTEND,
