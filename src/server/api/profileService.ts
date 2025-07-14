@@ -1,4 +1,4 @@
-import { readBody, parseCookies, H3Event, getQuery } from 'h3';
+import { readBody, parseCookies, H3Event, getQuery, createError } from 'h3';
 import prisma from '../../database/db';
 import { extractUserIdFromToken } from '../../jwt';
 import { graphqlFetch, graphqlHeaderFetch } from '../utils/graphqlFetch';
