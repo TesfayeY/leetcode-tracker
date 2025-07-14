@@ -251,6 +251,9 @@ const items = [
 
 //Variables for page
 const displayName = useCookie('name').value;
+const checkinToken = useCookie('latestCheckinToken');
+const streakToken = useCookie('latestStreakToken');
+const dailyProblemToken = useCookie('latestDailyProblemToken');
 const name = ref<string | null>(displayName);
 
 
@@ -436,6 +439,15 @@ const handleTimeInput = async (event: any) => {
 
   } catch (error: any) {
     reportError(error, {section: 'settings/preferences'});
+  }
+
+  // Update the tokens
+  if (autoType === 'autoStreakDatetime') {
+    streakToken.value = inputTime;
+  } else if (autoType === 'autoCheckinDatetime') {
+    checkinToken.value = inputTime;
+  } else {
+    dailyProblemToken.value = inputTime;
   }
 }
 

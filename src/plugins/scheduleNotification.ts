@@ -34,9 +34,9 @@ export default defineNuxtPlugin({
           });
           
           if (response.data) {
-            latestDailyProblemToken.value = (new Date(response.data.autoProblemDatetime)).getUTCHours().toString();
-            latestCheckinToken.value = (new Date(response.data.autoCheckinDatetime)).getUTCHours().toString();
-            latestStreakToken.value = (new Date(response.data.autoStreakDatetime)).getUTCHours().toString();
+            latestDailyProblemToken.value = (new Date(response.data.autoProblemDatetime)).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false });
+            latestCheckinToken.value = (new Date(response.data.autoCheckinDatetime)).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false });
+            latestStreakToken.value = (new Date(response.data.autoStreakDatetime)).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false });
           }
 
         } catch(error: any) {
@@ -46,29 +46,30 @@ export default defineNuxtPlugin({
       }
 
       // Setup each auto notification a scheduler
-      await checkIntervalStatus(parseInt(latestDailyProblemToken.value), 'latestDailyProblemNotification');
-      scheduleInterval(parseInt(latestDailyProblemToken.value), 'latestDailyProblemNotification');
+      await checkIntervalStatus(latestDailyProblemToken.value, 'latestDailyProblemNotification');
+      scheduleInterval(latestDailyProblemToken.value, 'latestDailyProblemNotification');
 
-      await checkIntervalStatus(parseInt(latestCheckinToken.value), 'latestCheckinNotification');
-      scheduleInterval(parseInt(latestCheckinToken.value), 'latestCheckinNotification');
+      await checkIntervalStatus(latestCheckinToken.value, 'latestCheckinNotification');
+      scheduleInterval(latestCheckinToken.value, 'latestCheckinNotification');
 
-      await checkIntervalStatus(parseInt(latestStreakToken.value), 'latestStreakNotification');
-      scheduleInterval(parseInt(latestStreakToken.value), 'latestStreakNotification');
+      await checkIntervalStatus(latestStreakToken.value, 'latestStreakNotification');
+      scheduleInterval(latestStreakToken.value, 'latestStreakNotification');
     });
   } 
 });
 
-async function checkIntervalStatus(userChosenHour: number, tokenStorageName: string) {
+async function checkIntervalStatus(userChosenHour: string, tokenStorageName: string) {
   const latestNotification = useCookie(tokenStorageName);
   const currentDatetime = new Date();
-  const currentHour = currentDatetime.getUTCHours();
+  const currentHour = currentDatetime.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false });
   const currentDay = currentDatetime.toISOString().split('T')[0];
 
   const latestDay = latestNotification.value;
+  //console.log(currentHour, userChosenHour)
 
-  // Check if there is the last notification day token or the current is already passes user hour
-  if (latestDay === null || latestDay === undefined || currentHour >= userChosenHour && latestDay !== currentDay) {
-
+  // Check if there is the last notification day token or the current is already passes user hour and minutes
+  if (latestDay === null || latestDay === undefined || currentHour >= userChosenHour && latestDay !== currentDay
+  ) {
     // If time reach, send the notification
     const typeNotification = tokenStorageName.split('latest')[1].toUpperCase();
     sendNotification(typeNotification);
@@ -77,15 +78,15 @@ async function checkIntervalStatus(userChosenHour: number, tokenStorageName: str
   }
 }
 
-function scheduleInterval(userChosenHour: number, tokenStorageName: string) {
+function scheduleInterval(userChosenHour: string, tokenStorageName: string) {
   const currentDatetime = new Date();
   const nextUserChosenDateTime = new Date();
   //Set the  hour in time the notification will be sent
-  nextUserChosenDateTime.setUTCHours(userChosenHour, 0, 0, 0);
+  nextUserChosenDateTime.setHours(parseInt(userChosenHour.split(':')[0]), parseInt(userChosenHour.split(':')[1]), 0, 0);
 
   // Check if the current time is already pass the user time, set to next day point if so
   if (currentDatetime >= nextUserChosenDateTime) {
-    nextUserChosenDateTime.setUTCDate(nextUserChosenDateTime.getUTCDate() + 1);
+    nextUserChosenDateTime.setDate(nextUserChosenDateTime.getDate() + 1);
   }
 
   // Calculate the interval to wait to trigger the next sending
@@ -94,16 +95,16 @@ function scheduleInterval(userChosenHour: number, tokenStorageName: string) {
   //Debuging only for checking waiting, every 1 hour to log one time
   // const timer = setInterval(() => {
   //   console.log(`Time remaining until next run: ${nextUserChosenDateTime.getTime() - (new Date().getTime())} milliseconds at ${tokenStorageName}`)
-  // }, 1000)
+  // }, 10000)
 
   // The waiting block
-  // console.log(`start to wait for ${tokenStorageName}`)
+  console.log(`start to wait for ${tokenStorageName}`)
   setTimeout(() => {
     checkIntervalStatus(userChosenHour, tokenStorageName);
     scheduleInterval(userChosenHour, tokenStorageName);
 
     //clear the timer debugging
-    //clearInterval(timer);
+    // clearInterval(timer);
   }, intervalMillis);
 }
 
