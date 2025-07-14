@@ -1,48 +1,52 @@
 export default defineNuxtPlugin({
   enforce: 'pre',
   async setup(nuxtApp) {
-    // Check if the user has been logged in, only perform the notification when the user is logged in
-    const token = useCookie('token');
-    const latestStreakToken = useCookie('latestStreakToken');
-    const latestCheckinToken = useCookie('latestCheckinToken');
-    const latestDailyProblemToken = useCookie('latestDailyProblemToken');
-    
-    if (!token) {
-      console.log('Logged out! No notification scheduled')
-      return;
-    }
-    
-    if (!(latestDailyProblemToken.value && latestCheckinToken.value && latestStreakToken.value)) {
-      try {
-        const response = await $fetch(`/api/user/preference`, {
-          method: 'GET',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${token}`,
-          }
-        });
-
-        if (response.data) {
-          latestDailyProblemToken.value = (new Date(response.data.autoProblemDatetime)).getUTCHours().toString();
-          latestCheckinToken.value = (new Date(response.data.autoCheckinDatetime)).getUTCHours().toString();
-          latestStreakToken.value = (new Date(response.data.autoStreakDatetime)).getUTCHours().toString();
-        }
-
-      } catch(error: any) {
-        console.log(error)
+    onNuxtReady(async () => {
+      // Check if the user has been logged in, only perform the notification when the user is logged in with cookies set
+      const token = useCookie('token');
+      const latestStreakToken = useCookie('latestStreakToken');
+      const latestCheckinToken = useCookie('latestCheckinToken');
+      const latestDailyProblemToken = useCookie('latestDailyProblemToken');
+      
+      if (!token.value) {
+        console.log('Logged out! No notification scheduled')
+        return;
       }
-    }
+      
+      // Check if the cookies are set in the browser, even the JWT token is expired
+      // These notification cookie should not depends on the validity of JWT token
+      if (!(latestDailyProblemToken.value && latestCheckinToken.value && latestStreakToken.value)) {
+        try {
+          const response = await $fetch(`/api/user/preference`, {
+            method: 'GET',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${token}`,
+            }
+          });
 
-    // Setup each auto notification a schedule
-    await checkIntervalStatus(parseInt(latestDailyProblemToken.value), 'latestDailyProblemNotification');
-    scheduleInterval(parseInt(latestDailyProblemToken.value), 'latestDailyProblemNotification', 60000);
+          if (response.data) {
+            latestDailyProblemToken.value = (new Date(response.data.autoProblemDatetime)).getUTCHours().toString();
+            latestCheckinToken.value = (new Date(response.data.autoCheckinDatetime)).getUTCHours().toString();
+            latestStreakToken.value = (new Date(response.data.autoStreakDatetime)).getUTCHours().toString();
+          }
 
-    await checkIntervalStatus(parseInt(latestCheckinToken.value), 'latestCheckinNotification');
-    scheduleInterval(parseInt(latestCheckinToken.value), 'latestCheckinNotification', 30000);
+        } catch(error: any) {
+          console.log(error)
+        }
+      }
 
-    await checkIntervalStatus(parseInt(latestStreakToken.value), 'latestStreakNotification');
-    scheduleInterval(parseInt(latestStreakToken.value), 'latestStreakNotification', 10000);
-  }
+      // Setup each auto notification a schedule
+      await checkIntervalStatus(parseInt(latestDailyProblemToken.value), 'latestDailyProblemNotification');
+      scheduleInterval(parseInt(latestDailyProblemToken.value), 'latestDailyProblemNotification', 60000);
+
+      await checkIntervalStatus(parseInt(latestCheckinToken.value), 'latestCheckinNotification');
+      scheduleInterval(parseInt(latestCheckinToken.value), 'latestCheckinNotification', 30000);
+
+      await checkIntervalStatus(parseInt(latestStreakToken.value), 'latestStreakNotification');
+      scheduleInterval(parseInt(latestStreakToken.value), 'latestStreakNotification', 10000);
+    });
+  } 
 });
 
 async function checkIntervalStatus(userChosenHour: number, tokenStorageName: string) {
@@ -101,5 +105,5 @@ async function sendNotification(typeNotification: 'STREAK' | 'CHECKIN' | 'DAILY'
 }
 
 async function sendInboxMessage(content: string) {
-  
+
 }
