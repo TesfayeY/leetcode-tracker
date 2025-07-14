@@ -1,9 +1,9 @@
 export default defineNuxtPlugin({
+  name: 'create-system-worker',
   enforce: 'pre',
   async setup() {
     onNuxtReady(async () => {
       const { reportError } = useErrorLogger();
-      const runtimeConfig = useRuntimeConfig();
 
       // Check and create system worker
       await $fetch('/api/auth/registerWorker', {

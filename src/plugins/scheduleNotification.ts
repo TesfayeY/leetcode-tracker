@@ -2,8 +2,8 @@ import { useErrorLogger } from '~/composables/useErrorLogger';
 
 export default defineNuxtPlugin({
   enforce: 'pre',
-  dependsOn: ['createSystemWorker'],
-  async setup(nuxtApp) {
+  dependsOn: ['create-system-worker'],
+  async setup() {
     onNuxtReady(async () => {
       const { reportError } = useErrorLogger();
       const token = useCookie('token');
@@ -45,15 +45,15 @@ export default defineNuxtPlugin({
         }
       }
 
-      // Setup each auto notification a schedule
+      // Setup each auto notification a scheduler
       await checkIntervalStatus(parseInt(latestDailyProblemToken.value), 'latestDailyProblemNotification');
-      scheduleInterval(parseInt(latestDailyProblemToken.value), 'latestDailyProblemNotification', 6000);
+      scheduleInterval(parseInt(latestDailyProblemToken.value), 'latestDailyProblemNotification');
 
       await checkIntervalStatus(parseInt(latestCheckinToken.value), 'latestCheckinNotification');
-      scheduleInterval(parseInt(latestCheckinToken.value), 'latestCheckinNotification', 3000);
+      scheduleInterval(parseInt(latestCheckinToken.value), 'latestCheckinNotification');
 
       await checkIntervalStatus(parseInt(latestStreakToken.value), 'latestStreakNotification');
-      scheduleInterval(parseInt(latestStreakToken.value), 'latestStreakNotification', 1000);
+      scheduleInterval(parseInt(latestStreakToken.value), 'latestStreakNotification');
     });
   } 
 });
@@ -68,15 +68,16 @@ async function checkIntervalStatus(userChosenHour: number, tokenStorageName: str
 
   // Check if there is the last notification day token or the current is already passes user hour
   if (latestDay === null || latestDay === undefined || currentHour >= userChosenHour && latestDay !== currentDay) {
+
+    // If time reach, send the notification
     const typeNotification = tokenStorageName.split('latest')[1].toUpperCase();
-    console.log('Send')
     sendNotification(typeNotification);
 
     latestNotification.value = currentDay;
   }
 }
 
-function scheduleInterval(userChosenHour: number, tokenStorageName: string, debugTimer: number) {
+function scheduleInterval(userChosenHour: number, tokenStorageName: string) {
   const currentDatetime = new Date();
   const nextUserChosenDateTime = new Date();
   //Set the  hour in time the notification will be sent
@@ -93,13 +94,13 @@ function scheduleInterval(userChosenHour: number, tokenStorageName: string, debu
   //Debuging only for checking waiting, every 1 hour to log one time
   // const timer = setInterval(() => {
   //   console.log(`Time remaining until next run: ${nextUserChosenDateTime.getTime() - (new Date().getTime())} milliseconds at ${tokenStorageName}`)
-  // }, debugTimer)
+  // }, 1000)
 
-  console.log(`start to wait for ${tokenStorageName}`)
   // The waiting block
+  // console.log(`start to wait for ${tokenStorageName}`)
   setTimeout(() => {
     checkIntervalStatus(userChosenHour, tokenStorageName);
-    scheduleInterval(userChosenHour, tokenStorageName, debugTimer);
+    scheduleInterval(userChosenHour, tokenStorageName);
 
     //clear the timer debugging
     //clearInterval(timer);
@@ -143,7 +144,7 @@ async function sendInboxMessage(content: string) {
     }
   }
   catch (error: any) {
-    console.log(error)
+    console.log(error);
     reportError(error, { section : `scheduler`});
   }
 }
