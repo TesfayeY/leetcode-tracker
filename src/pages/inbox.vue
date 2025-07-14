@@ -89,6 +89,11 @@ import { NUM_INBOX_DEFAULT_DISPLAY } from '~/constants/appConst';
 import { useErrorLogger } from '~/composables/useErrorLogger';
 import ConfirmationModal from '~/components/confirmationModal.vue';
 
+definePageMeta({
+  layout: 'default',
+  middleware: 'require-auth'
+});
+
 const { reportError }= useErrorLogger();
 const token = useCookie('token');
 const page = ref(1);
