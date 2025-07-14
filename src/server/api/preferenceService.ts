@@ -3,26 +3,31 @@ import { parseCookies, H3Event, getQuery, readBody, createError } from 'h3';
 import { extractUserIdFromToken } from '../../jwt';
 
 async function getPreferenceFromUserId(userId: number) {
-  const allUserPreference = await prisma.preference.findUnique({
-    where: {
-      id: userId
-    },
-    select: {
-      isNotify: true,
-      isAutoNotify: true,
-      isInboxNotify: true,
-      isEmailNotify: true,
-      isWebPushNotify: true,
-      isStreakNotify: true,
-      isCheckinNotify: true,
-      isProblemNotify: true,
-      isInboxMessage: true,
-      isEmailMessage: true,
-      isWebPushMessage: true,
-    }
-  });
-  
-  return allUserPreference;
+  if (userId) {
+    const allUserPreference = await prisma.preference.findUnique({
+      where: {
+        id: userId
+      },
+      select: {
+        isNotify: true,
+        isAutoNotify: true,
+        isInboxNotify: true,
+        isEmailNotify: true,
+        isWebPushNotify: true,
+        isStreakNotify: true,
+        isCheckinNotify: true,
+        isProblemNotify: true,
+        isInboxMessage: true,
+        isEmailMessage: true,
+        isWebPushMessage: true,
+        autoStreakDatetime: true,
+        autoCheckinDatetime: true,
+        autoProblemDatetime: true
+      }
+    });
+    
+    return allUserPreference;
+  }
 }
 
 export async function getUserPreference(event: H3Event) {
@@ -31,14 +36,16 @@ export async function getUserPreference(event: H3Event) {
   const userId = extractedUserId !== null ? extractedUserId : undefined;
 
   try {
-    const user = await prisma.user.findUnique({
-      where: {
-        id: userId
-      }
-    });
+    if (userId) {
+      const user = await prisma.user.findUnique({
+        where: {
+          id: userId
+        }
+      });
 
-    if (!user) {
-      throw createError({ statusCode: 401, statusMessage: 'Unauthorized user' });
+      if (!user) {
+        throw createError({ statusCode: 401, statusMessage: 'Unauthorized user' });
+      }
     }
 
     const allPreferences = await getPreferenceFromUserId(userId);
