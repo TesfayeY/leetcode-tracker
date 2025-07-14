@@ -2,6 +2,7 @@ import { useErrorLogger } from '~/composables/useErrorLogger';
 
 export default defineNuxtPlugin({
   enforce: 'pre',
+  dependsOn: ['createSystemWorker'],
   async setup(nuxtApp) {
     onNuxtReady(async () => {
       const { reportError } = useErrorLogger();
