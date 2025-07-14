@@ -1,6 +1,6 @@
 <template>
   <div class="mr-4">
-    <UTabs :items="items" class="w-full">
+    <UTabs :items="items" class="w-full mb-10">
       <!-- Preference settings form -->
       <template #Preferences="{ item }">
         <UCard>
@@ -22,17 +22,50 @@
               <p>Auto Notifications</p>
               <UToggle v-model="isAutoSelected" @change="handleAutoToggle"></UToggle>
             </div>
-            <div class="flex flex row justify-between ml-10">
+            <div class="flex flex row justify-between ml-10 items-center">
               <p>Streak Days</p>
-              <UToggle v-model="isStreakSelected" @change="handleIndividualToggle('isStreakNotify', isStreakSelected)"></UToggle>
+              <div class="flex flex row justify-end gap-5 m-0 items-center">
+                <p>At:</p>
+                <input 
+                  id="autoStreakDatetime"
+                  v-model="streakTimeInput" 
+                  v-bind:disabled="!isStreakSelected"
+                  @change="handleTimeInput" 
+                  type="time" 
+                  class="p-1 rounded-md border-2 border-green-300 bg-transparent"
+                ></input>
+                <UToggle v-model="isStreakSelected" @change="handleIndividualToggle('isStreakNotify', isStreakSelected)"></UToggle>
+              </div>
             </div>
-            <div class="flex flex row justify-between ml-10">
+            <div class="flex flex row justify-between ml-10 items-center">
               <p>Check In Today</p>
-              <UToggle v-model="isCheckInSelected" @change="handleIndividualToggle('isCheckinNotify', isCheckInSelected)"></UToggle>
+              <div class="flex flex row justify-end gap-5 m-0 items-center">
+                <p>At:</p>
+                <input 
+                  id="autoCheckinDatetime"
+                  v-model="checkinTimeInput" 
+                  v-bind:disabled="!isCheckInSelected"
+                  @change="handleTimeInput"  
+                  type="time" 
+                  class="p-1 rounded-md border-2 border-green-300 bg-transparent"
+                ></input>
+                <UToggle v-model="isCheckInSelected" @change="handleIndividualToggle('isCheckinNotify', isCheckInSelected)"></UToggle>
+              </div>
             </div>
-            <div class="flex flex row justify-between ml-10">
+            <div class="flex flex row justify-between ml-10 items-center">
               <p>Daily Leetcode Problem</p>
-              <UToggle v-model="isDailySelected" @change="handleIndividualToggle('isProblemNotify', isDailySelected)"></UToggle>
+              <div class="flex flex row justify-end gap-5 m-0 items-center">
+                <p>At:</p>
+                <input 
+                  id="autoProblemDatetime"
+                  v-model="dailyTimeInput" 
+                  v-bind:disabled="!isDailySelected" 
+                  @change="handleTimeInput" 
+                  type="time" 
+                  class="p-1 rounded-md border-2 border-green-300 bg-transparent"
+                ></input>
+                <UToggle v-model="isDailySelected" @change="handleIndividualToggle('isProblemNotify', isDailySelected)"></UToggle>
+              </div>
             </div>
             <UDivider></UDivider>
             <div class="flex flex row justify-between">
@@ -245,6 +278,9 @@ const isWebPushSelected = ref(true);
 const isInboxMessageSelected = ref(true);
 const isEmailMessageSelected = ref(false);
 const isWebPushMessageSelected = ref(true);
+const streakTimeInput = ref('');
+const checkinTimeInput = ref('');
+const dailyTimeInput = ref('');
 
 const token = useCookie('token') ;
 
@@ -370,6 +406,39 @@ async function onDeleteAccount() {
   }
 }
 
+const handleTimeInput = async (event: any) => {
+  const inputTime = event.target.value;
+  const autoType = event.target.id;
+
+  // Set datetime object
+  const today = new Date();
+  const hour = parseInt(inputTime.split(':')[0]);
+  const minutes = parseInt(inputTime.split(':')[1]);
+
+  today.setHours(hour);
+  today.setMinutes(minutes);
+  today.setSeconds(0);
+  today.setMilliseconds(0);
+
+  // Update the preferences
+  try {
+    const response = await $fetch(`api/user/preference`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`,
+      },
+      body: {
+        autoTimeInputType: autoType,
+        value: today
+      }
+    });
+
+  } catch (error: any) {
+    reportError(error, {section: 'settings/preferences'});
+  }
+}
+
 const handleAllToggle = async () => {
   //All notification captures all other ones
   isAutoSelected.value = isAllSelected.value;
@@ -472,7 +541,14 @@ function assignPreferences(response: any) {
     isWebPushMessageSelected.value = response.data.isWebPushMessage ?? isWebPushMessageSelected.value;
     isInboxMessageSelected.value = response.data.isInboxMessage ?? isInboxMessageSelected.value;
     isEmailMessageSelected.value = response.data.isEmailMessage ?? isEmailMessageSelected.value;
+    streakTimeInput.value = formatTimeDisplay(new Date(response.data.autoStreakDatetime ?? streakTimeInput.value));
+    checkinTimeInput.value = formatTimeDisplay(new Date(response.data.autoCheckinDatetime ?? checkinTimeInput.value));
+    dailyTimeInput.value = formatTimeDisplay(new Date(response.data.autoProblemDatetime ?? dailyTimeInput.value));
   }
+}
+
+function formatTimeDisplay(datetime: Date) {
+  return datetime.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false });
 }
 
 </script>

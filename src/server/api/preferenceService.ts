@@ -74,26 +74,28 @@ export async function updateUserPreference(event: H3Event, type: string) {
       throw createError({ statusCode: 401, statusMessage: 'Unauthorized user' });
     }
 
-    if (type === 'all') {
-      await prisma.preference.update({
-        where: {
-          userId: userId
-        },
-        data: {
-          isNotify: body.isNotify,
-          isAutoNotify: body.isAutoNotify,
-          isInboxNotify: body.isInboxNotify,
-          isEmailNotify: body.isEmailNotify,
-          isWebPushNotify: body.isWebPushNotify,
-          isStreakNotify: body.isStreakNotify,
-          isCheckinNotify: body.isCheckinNotify,
-          isProblemNotify: body.isProblemNotify,
-          isInboxMessage: body.isInboxMessage,
-          isEmailMessage: body.isEmailMessage,
-          isWebPushMessage: body.isWebPushMessage,
-        }
-      });
-    } else if (type === 'auto') {
+    switch (type) {
+      case 'all':
+        await prisma.preference.update({
+          where: {
+            userId: userId
+          },
+          data: {
+            isNotify: body.isNotify,
+            isAutoNotify: body.isAutoNotify,
+            isInboxNotify: body.isInboxNotify,
+            isEmailNotify: body.isEmailNotify,
+            isWebPushNotify: body.isWebPushNotify,
+            isStreakNotify: body.isStreakNotify,
+            isCheckinNotify: body.isCheckinNotify,
+            isProblemNotify: body.isProblemNotify,
+            isInboxMessage: body.isInboxMessage,
+            isEmailMessage: body.isEmailMessage,
+            isWebPushMessage: body.isWebPushMessage,
+          }
+        });
+        break;
+      case 'auto':
         await prisma.preference.update({
           where: {
             userId: userId
@@ -105,7 +107,8 @@ export async function updateUserPreference(event: H3Event, type: string) {
             isProblemNotify: body.isProblemNotify,
           }
         });
-    } else if (type === 'individual') {
+        break;
+      case 'individual':
         await prisma.preference.update({
           where: {
             userId: userId
@@ -114,6 +117,19 @@ export async function updateUserPreference(event: H3Event, type: string) {
             [body.notificationType]: body.value
           }
         });
+        break;
+      case 'datetime':
+        await prisma.preference.update({
+          where: {
+            userId: userId
+          },
+          data: {
+            [body.autoTimeInputType]: body.value
+          }
+        })
+        break;
+      default:
+        throw createError({ statusCode: 500, statusMessage: 'Server error, cannot update preferences' });
     }
     
     const allPreferences = await getPreferenceFromUserId(userId);

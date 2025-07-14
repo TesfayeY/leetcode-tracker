@@ -164,13 +164,13 @@ export async function deleteUserInbox(event: H3Event) {
   }
 }
 
+// This is for automatic messaging to user inbox
 export async function createAutoInboxMessage(event: H3Event) {
   const body = await readBody(event);
   const runtimeConfig = useRuntimeConfig();
 
   const messageContent = body.messageContent;
   const recipientUsername = body.recipientUsername;
-  console.log(messageContent, recipientUsername)
 
   try {
     // Get the recipient from current username
@@ -192,7 +192,7 @@ export async function createAutoInboxMessage(event: H3Event) {
     });
 
     if (!systemSender) {
-      throw createError({ statusCode: 404, statusMessage: 'System admin not found' });
+      throw createError({ statusCode: 404, statusMessage: 'System worker not found' });
     }
 
     // Only create message if the token and both sender and recipient ids are valid
