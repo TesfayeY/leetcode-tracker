@@ -1,6 +1,7 @@
 import * as Sentry from "@sentry/nuxt";
 import { useErrorLogger } from '~/composables/useErrorLogger';
 const {reportError} = useErrorLogger();
+
 export default defineNuxtPlugin(nuxtApp => {
   nuxtApp.vueApp.config.errorHandler = (error, instance, info) => {
     reportError(error, {
