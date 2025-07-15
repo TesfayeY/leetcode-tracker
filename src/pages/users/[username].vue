@@ -39,11 +39,16 @@
 
 <script lang="ts" setup>
 import { useRoute } from 'vue-router';
-import { ref, onMounted, onBeforeMount } from 'vue';
+import { ref, onBeforeMount } from 'vue';
 import { useErrorLogger } from '../../composables/useErrorLogger';
 import { LEETCODE_SESSION_INSTRUCTION } from '~/constants/appConst';
 import InputModal from '../../components/inputModal.vue';
 import UserCard from '../../components/userCard.vue';
+
+definePageMeta({
+  layout: 'default',
+  middleware: 'require-auth'
+});
 
 const { reportError } = useErrorLogger();
 const route = useRoute();

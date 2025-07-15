@@ -1,5 +1,5 @@
 import bcrypt from 'bcrypt';
-import { defineEventHandler, readBody } from 'h3';
+import { defineEventHandler, readBody, setCookie } from 'h3';
 import prisma from '../../../database/db';
 import { createJwtToken } from '../../../jwt';
 

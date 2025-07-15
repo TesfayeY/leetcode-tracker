@@ -21,6 +21,32 @@ async function getInboxFromUserId(userId: number) {
   return allUserInbox;
 }
 
+async function createMessageFromSenderRecipient(senderId: number, recipientId: number, messageContent: string, isInvitation: boolean) {
+  if (senderId != null || recipientId != null) {
+    const message = await prisma.inbox.create({
+      data: {
+        recipient: {
+          connect: {
+            id: recipientId
+          }
+        },
+        sender: {
+          connect: {
+            id: senderId
+          }
+        },
+        context: messageContent,
+        isInvitation: isInvitation,
+        acknowledgement: 'RECEIVED'
+      }
+    });
+
+    if (message === null) {
+      throw createError({ statusCode: 500, statusMessage: 'Internal Server Error, cannot create message' })
+    }
+  }
+}
+
 export async function getUserInboxMessages(event: H3Event) {
   const cookies = parseCookies(event);
   const extractedUserId = await extractUserIdFromToken(cookies.token);
@@ -65,33 +91,11 @@ export async function createUserInboxMessage(event: H3Event) {
     });
 
     if (!recipient) {
-      throw createError({ statusCode: 404, statusMessage: 'Recipient user not found' })
+      throw createError({ statusCode: 404, statusMessage: 'Recipient user not found' });
     }
 
-    // Only create message if the token and both userId is valid
-    if (userId !== undefined) {
-      const message = await prisma.inbox.create({
-        data: {
-          recipient: {
-            connect: {
-              id: recipient.id
-            }
-          },
-          sender: {
-            connect: {
-              id: userId
-            }
-          },
-          context: messageContent,
-          isInvitation: isInvitation,
-          acknowledgement: 'RECEIVED'
-        }
-      });
-
-      if (message === null) {
-        throw createError({ statusCode: 500, statusMessage: 'Internal Server Error, cannot create message' })
-      }
-    }
+    // Only create message if the token and both sender and recipient ids are valid
+    await createMessageFromSenderRecipient(userId, recipient.id, messageContent, isInvitation);
     
     const allUserInbox = await getInboxFromUserId(userId);
 
@@ -156,6 +160,47 @@ export async function deleteUserInbox(event: H3Event) {
     return { data: allUserInbox, message: 'Sucessfully delete user inbox' };
 
   } catch(error: any) {
+    throw error;
+  }
+}
+
+// This is for automatic messaging to user inbox
+export async function createAutoInboxMessage(event: H3Event) {
+  const body = await readBody(event);
+  const runtimeConfig = useRuntimeConfig();
+
+  const messageContent = body.messageContent;
+  const recipientUsername = body.recipientUsername;
+
+  try {
+    // Get the recipient from current username
+    const recipient = await prisma.user.findUnique({
+      where: {
+        email: recipientUsername
+      }
+    });
+
+    if (!recipient) {
+      throw createError({ statusCode: 404, statusMessage: 'Recipient user not found' });
+    }
+
+    // Find the system user
+    const systemSender = await prisma.user.findUnique({
+      where: {
+        email: runtimeConfig.systemAdmin.appWorkerUsername,
+      }
+    });
+
+    if (!systemSender) {
+      throw createError({ statusCode: 404, statusMessage: 'System worker not found' });
+    }
+
+    // Only create message if the token and both sender and recipient ids are valid
+    await createMessageFromSenderRecipient(systemSender.id, recipient.id, messageContent, false);
+
+    return { message: 'Sucessfully send messages' };
+
+  } catch (error: any) {
     throw error;
   }
 }

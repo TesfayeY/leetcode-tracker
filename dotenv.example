@@ -25,6 +25,11 @@ APP_PORT=
 # The port on which the database container will run
 DB_PORT=
 
+# Below are the configs for the application. Add here if needed more.
+# The application system worker username and password (email format) (All Required)
+APP_WORKER_USERNAME=
+APP_WORKER_PASSWORD=
+
 # Below are the configs for Sentry event reporting
 # The environment setting of this application to report to Sentry (development/production) (Omitted for production environment)
 SENTRY_ENV=

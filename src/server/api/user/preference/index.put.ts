@@ -21,6 +21,10 @@ export default defineEventHandler(async (event) => {
   if ('notificationType' in body) {
     return updateUserPreference(event, 'individual');
   }
+
+  if ('autoTimeInputType' in body) {
+    return updateUserPreference(event, 'datetime');
+  }
   
   event.res.statusCode = 400;
   return { message: 'Missing fields' };

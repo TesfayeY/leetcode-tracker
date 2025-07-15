@@ -8,3 +8,4 @@ click on the Cookies dropdown,
 find the leetcode.com domain,
 then seek for LEETCODE_SESSION value. 
 Do not share this token!`;
+export const SYSTEM_WORKER_DISPLAYNAME: string = 'System Worker'

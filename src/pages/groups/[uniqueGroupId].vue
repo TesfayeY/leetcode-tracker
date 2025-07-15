@@ -137,6 +137,11 @@ interface Group {
   users:       User[]
 }
 
+definePageMeta({
+  layout: 'default',
+  middleware: 'require-auth'
+});
+
 const route          = useRoute()
 const router         = useRouter()
 const uniqueGroupId  = route.params.uniqueGroupId as string

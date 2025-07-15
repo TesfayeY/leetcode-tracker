@@ -53,27 +53,28 @@
   });
 // onMounted hook ensures the Sentry event is sent only when the component is fully mounted in the DOM
  onMounted(() => {
+  console.log(props.error)
    // Check if an error object is present in props
-   if (props.error) {
-     // Capture the NuxtError as a Sentry exception, logs the full error details to  dashboard
-     Sentry.captureException(props.error, {
-       // additional tags to the Sentry event for better filtering and analysis
-       tags: {
-         // Tag to easily identify events originating from the error page
-         error_page_view: 'true',
-         status_code: props.error.statusCode,
-       },
-       contexts: {
-         error_details: {
-           statusCode: props.error.statusCode,
-           statusMessage: props.error.statusMessage,
+  if (props.error) {
+    // Capture the NuxtError as a Sentry exception, logs the full error details to  dashboard
+    Sentry.captureException(props.error, {
+      // additional tags to the Sentry event for better filtering and analysis
+      tags: {
+        // Tag to easily identify events originating from the error page
+        error_page_view: 'true',
+        status_code: props.error.statusCode,
+      },
+      contexts: {
+        error_details: {
+          statusCode: props.error.statusCode,
+          statusMessage: props.error.statusMessage,
 
 
-         },
-       },
-     });
-   }
- });
+        },
+      },
+    });
+  }
+});
 
 </script>
 

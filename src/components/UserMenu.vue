@@ -23,27 +23,40 @@ const props = defineProps({
 const isOpen = ref(false)
 const router = useRouter()
 const user = { avatarUrl: '/img/avatar.png' } // Keep for now as you only want minimal change
+const isSetting = ref(false);
 
 const items = [
   [{
     label: 'Home',
     icon: 'i-heroicons-home-20-solid',
-    click: () => goTo('/welcome')
+    click: () => {
+      goTo('/welcome');
+      isSetting.value = false;
+    }
   },
   {
     label: 'Profile',
     icon: 'i-heroicons-user-circle',
-    click: () => goTo(props.profilePath)
+    click: () => {
+      goTo(props.profilePath);
+      isSetting.value = false;
+    }
   },
   {
     label: 'Inbox',
     icon: 'i-heroicons-envelope',
-    click: () => goTo('/inbox')
+    click: () => {
+      goTo('/inbox');
+      isSetting.value = false;
+    }
   },
   {
     label: 'Settings',
     icon: 'i-heroicons-cog-8-tooth',
-    click: () => goTo('/settings')
+    click: () => {
+      goTo('/settings');
+      isSetting.value = true;
+    }
   }],
   [{
     label: 'Logout',
@@ -55,7 +68,8 @@ const items = [
 // goTo now accepts the full path directly
 function goTo(path) { // Changed 'page' to 'path' for clarity
   isOpen.value = false
-  router.push(path) // Push the path directly
+  // Push the path directly. If it is from setting path reload the page to apply the changes
+  isSetting.value ? reloadNuxtApp({ path: path, force: true }) : router.push(path); 
 }
 
 const logout = async () => {
@@ -64,12 +78,12 @@ const logout = async () => {
     method: "POST",
     headers: { "Content-Type": "application/json" },
   }).then((data) => {
-    console.log('Logout successful (API response):', data);
+    isSetting.value = false;
+    //console.log('Logout successful (API response):', data);
     router.push('/login');
     return data;
   }).catch((error) => {
-    
-    console.error('Logout failed:', error);
+    //console.error('Logout failed:', error);
     router.push('/login');
   });
 };

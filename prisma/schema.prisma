@@ -42,9 +42,9 @@ model Group {
 
 model Inbox {
   id            Int     @id @default(autoincrement())   
-  sender        User    @relation("sender", fields: [senderId], references: [id])
+  sender        User    @relation("sender", fields: [senderId], references: [id], onDelete: Cascade)
   senderId      Int 
-  recipient     User    @relation("recipient", fields: [recipientId], references: [id])
+  recipient     User    @relation("recipient", fields: [recipientId], references: [id], onDelete: Cascade)
   recipientId   Int
   context       String  @db.TinyText @default("")
   isInvitation  Boolean
@@ -53,7 +53,7 @@ model Inbox {
 
 model Preference {
   id                  Int     @id @default(autoincrement())
-  user                User    @relation("userPreference", fields: [userId], references: [id])
+  user                User    @relation("userPreference", fields: [userId], references: [id], onDelete: Cascade)
   userId              Int     @unique
   //All notifications
   isNotify            Boolean @default(true)
