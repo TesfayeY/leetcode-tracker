@@ -1,3 +1,4 @@
+import { encryptSymmetric } from '~/composables/encryption';
 import { useErrorLogger } from '~/composables/useErrorLogger';
 
 export default defineNuxtPlugin({
@@ -110,7 +111,7 @@ function scheduleInterval(userChosenHour: string, tokenStorageName: string) {
   // }, 10000)
 
   // The waiting block
-  console.log(`start to wait for ${tokenStorageName}`)
+  //console.log(`start to wait for ${tokenStorageName}`)
   setTimeout(() => {
     checkIntervalStatus(userChosenHour, tokenStorageName);
     scheduleInterval(userChosenHour, tokenStorageName);
@@ -139,6 +140,7 @@ async function sendNotification(typeNotification: string) {
 async function sendInboxMessage(content: string) {
   const { reportError } = useErrorLogger();
   const recipientUsername = useCookie('email');
+  const runtimeConfig = useRuntimeConfig();
 
   try {
     const response = await $fetch(`/api/inbox/message/auto`, {
@@ -148,7 +150,7 @@ async function sendInboxMessage(content: string) {
       },
       body: {
         recipientUsername: recipientUsername.value,
-        messageContent: content
+        messageContent: await encryptSymmetric(runtimeConfig.public.messageEncryptionKey.toString(), content),
       }
     });
 
