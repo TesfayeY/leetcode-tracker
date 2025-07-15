@@ -254,6 +254,7 @@ const displayName = useCookie('name').value;
 const checkinToken = useCookie('latestCheckinToken');
 const streakToken = useCookie('latestStreakToken');
 const dailyProblemToken = useCookie('latestDailyProblemToken');
+const userPreferences = useCookie('preference');
 const name = ref<string | null>(displayName);
 
 
@@ -437,17 +438,18 @@ const handleTimeInput = async (event: any) => {
       }
     });
 
+    // Update the tokens
+    if (response.data) {
+      if (autoType === 'autoStreakDatetime') {
+        streakToken.value = inputTime;
+      } else if (autoType === 'autoCheckinDatetime') {
+        checkinToken.value = inputTime;
+      } else {
+        dailyProblemToken.value = inputTime;
+      }
+    }
   } catch (error: any) {
     reportError(error, {section: 'settings/preferences'});
-  }
-
-  // Update the tokens
-  if (autoType === 'autoStreakDatetime') {
-    streakToken.value = inputTime;
-  } else if (autoType === 'autoCheckinDatetime') {
-    checkinToken.value = inputTime;
-  } else {
-    dailyProblemToken.value = inputTime;
   }
 }
 
@@ -556,6 +558,13 @@ function assignPreferences(response: any) {
     streakTimeInput.value = formatTimeDisplay(new Date(response.data.autoStreakDatetime ?? streakTimeInput.value));
     checkinTimeInput.value = formatTimeDisplay(new Date(response.data.autoCheckinDatetime ?? checkinTimeInput.value));
     dailyTimeInput.value = formatTimeDisplay(new Date(response.data.autoProblemDatetime ?? dailyTimeInput.value));
+
+    // Update tokens for auto notification
+    userPreferences.value = {
+      daily: response.data.isProblemNotify,
+      checkin: response.data.isCheckinNotify,
+      streak: response.data.isStreakNotify
+    };
   }
 }
 

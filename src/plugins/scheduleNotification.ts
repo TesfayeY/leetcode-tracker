@@ -10,6 +10,7 @@ export default defineNuxtPlugin({
       const latestStreakToken = useCookie('latestStreakToken');
       const latestCheckinToken = useCookie('latestCheckinToken');
       const latestDailyProblemToken = useCookie('latestDailyProblemToken');
+      const userPreferences = useCookie('preference');
       
       // These notification cookie should not depends on the validity of JWT. 
       // Expired JWT still retain in the session storage as a string. Auto notification should not be affected.
@@ -37,6 +38,11 @@ export default defineNuxtPlugin({
             latestDailyProblemToken.value = (new Date(response.data.autoProblemDatetime)).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false });
             latestCheckinToken.value = (new Date(response.data.autoCheckinDatetime)).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false });
             latestStreakToken.value = (new Date(response.data.autoStreakDatetime)).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false });
+            userPreferences.value = { 
+              daily: response.data.isProblemNotify,
+              checkin: response.data.isCheckinNotify,
+              streak: response.data.isStreakNotify
+            };
           }
 
         } catch(error: any) {
@@ -46,14 +52,20 @@ export default defineNuxtPlugin({
       }
 
       // Setup each auto notification a scheduler
-      await checkIntervalStatus(latestDailyProblemToken.value, 'latestDailyProblemNotification');
-      scheduleInterval(latestDailyProblemToken.value, 'latestDailyProblemNotification');
+      if (toRaw(userPreferences.value).daily) {
+        await checkIntervalStatus(latestDailyProblemToken.value, 'latestDailyProblemNotification');
+        scheduleInterval(latestDailyProblemToken.value, 'latestDailyProblemNotification');
+      }
+      
+      if (toRaw(userPreferences.value).checkin) {
+        await checkIntervalStatus(latestCheckinToken.value, 'latestCheckinNotification');
+        scheduleInterval(latestCheckinToken.value, 'latestCheckinNotification');
+      }
 
-      await checkIntervalStatus(latestCheckinToken.value, 'latestCheckinNotification');
-      scheduleInterval(latestCheckinToken.value, 'latestCheckinNotification');
-
-      await checkIntervalStatus(latestStreakToken.value, 'latestStreakNotification');
-      scheduleInterval(latestStreakToken.value, 'latestStreakNotification');
+      if (toRaw(userPreferences.value).streak) {
+        await checkIntervalStatus(latestStreakToken.value, 'latestStreakNotification');
+        scheduleInterval(latestStreakToken.value, 'latestStreakNotification');
+      }
     });
   } 
 });

@@ -13,6 +13,7 @@ export default defineEventHandler(async (event) => {
     setCookie(event, 'latestDailyProblemToken', '', { maxAge: -1 });
     setCookie(event, 'latestCheckinToken', '', { maxAge: -1 });
     setCookie(event, 'latestStreakToken', '', { maxAge: -1 });
+    setCookie(event, 'preference', '', { maxAge: -1 });
     
     return {
         success: true,
