@@ -30,6 +30,9 @@ DB_PORT=
 APP_WORKER_USERNAME=
 APP_WORKER_PASSWORD=
 
+# The application private key for message encryption (Required)
+APP_MESSAGE_ENCRYPT_KEY=
+
 # Below are the configs for Sentry event reporting
 # The environment setting of this application to report to Sentry (development/production) (Omitted for production environment)
 SENTRY_ENV=
