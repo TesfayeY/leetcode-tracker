@@ -3,16 +3,16 @@ import { defineEventHandler, getQuery, getCookie, createError, H3Event } from 'h
 import { PrismaClient } from '@prisma/client';
 
 import {
-    getUserProfileAndRecentSubmissionsCached,
-    getUserCalendarCached,
-    getUserLanguageProblemCountCached,
-    getUserQuestionProgressCached,
-    getUserContestRankingCached,
-    getStreakCounterCached, // Requires authentication to LeetCode
-    getTagProblemCountsCached,
-    getUserStatusCached, // Requires authentication to LeetCode
-    
-} from '~/server/services/cacheService'; 
+  getUserProfileAndRecentSubmissionsCached,
+  getUserCalendarCached,
+  getUserLanguageProblemCountCached,
+  getUserQuestionProgressCached,
+  getUserContestRankingCached,
+  getStreakCounterCached, // Requires authentication to LeetCode
+  getTagProblemCountsCached,
+  getUserStatusCached, // Requires authentication to LeetCode
+
+} from '../../../services/cacheService';
 
 let prisma: PrismaClient;
 
@@ -66,8 +66,7 @@ export default defineEventHandler(async (event: H3Event) => {
     if (!userProfileAndRecentSubmissionsData || !userProfileAndRecentSubmissionsData.userProfile) {
       throw createError({
         statusCode: 404,
-        statusMessage: 'Not Found',
-        message: `LeetCode profile for username '${lcUsername}' not found or failed to retrieve.`,
+        statusMessage: `LeetCode profile for username '${lcUsername}' not found or failed to retrieve.`
       });
     }
 
@@ -105,37 +104,34 @@ export default defineEventHandler(async (event: H3Event) => {
     //Fetch User Contest Ranking (Cached) 
     const userContestRankingData = await getUserContestRankingCached(event, lcUsername);
     if (userContestRankingData) {
-        finalProfileResponse.matchedUser.userContestRanking = userContestRankingData;
+      finalProfileResponse.matchedUser.userContestRanking = userContestRankingData;
     }
 
     // Fetch User Question Progress (Cached) 
     const userQuestionProgressData = await getUserQuestionProgressCached(event, lcUsername);
     if (userQuestionProgressData) {
-        finalProfileResponse.matchedUser.userQuestionProgress = userQuestionProgressData;
+      finalProfileResponse.matchedUser.userQuestionProgress = userQuestionProgressData;
     }
 
     // Fetch Streak Counter (Cached) 
     // This query usually requires authentication via cookies. Ensure graphqlFetch handles it.
     const streakCounterData = await getStreakCounterCached(event);
     if (streakCounterData) {
-        finalProfileResponse.streakCounter = streakCounterData;
+      finalProfileResponse.streakCounter = streakCounterData;
     }
 
     // Fetch Tag Problem Counts (Cached)
     const tagProblemCountsData = await getTagProblemCountsCached(event, lcUsername);
     if (tagProblemCountsData) {
-        finalProfileResponse.matchedUser.tagProblemCounts = tagProblemCountsData;
+      finalProfileResponse.matchedUser.tagProblemCounts = tagProblemCountsData;
     }
 
     // Fetch User Status (Cached) 
     // This query usually requires authentication via cookies. Ensure graphqlFetch handles it.
     const userStatusData = await getUserStatusCached(event);
     if (userStatusData) {
-        finalProfileResponse.userStatus = userStatusData;
+      finalProfileResponse.userStatus = userStatusData;
     }
-
-
-
 
   } catch (error: any) {
     console.error('Error in /api/user/profile.get.ts:', error);

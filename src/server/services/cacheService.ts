@@ -1,5 +1,5 @@
-import { H3Event } from 'h3'; 
-import { getRedisClient } from '../utils/redisHelper'; 
+import { H3Event } from 'h3';
+import { getRedisClient } from '../utils/redisHelper';
 import {
     fetchUserProfileAndRecentSubmissionsFromLeetCode,
     fetchUserCalendarFromLeetCode,
@@ -12,7 +12,7 @@ import {
     fetchCreatedPublicFavoriteListFromLeetCode,
     fetchTagProblemCountsFromLeetCode,
     fetchUserStatusFromLeetCode,
-} from './leetcodeApi'; 
+} from './leetcodeApi';
 
 import {
     REDIS_TTL_USER_PROFILE_RECENT_SUBMISSIONS,
@@ -28,15 +28,13 @@ import {
     REDIS_TTL_USER_CONTEST_RANKING
 } from './../../constants/appConst';
 
-
-
 // --- Generic Cache-Aside Function (Helper) ---
 // This simplifies writing multiple caching functions
 async function getCachedData<T>(
-    event: H3Event, 
+    event: H3Event,
     key: string,
     ttl: number,
-    fetcher: (event: H3Event) => Promise<T | null> 
+    fetcher: (event: H3Event) => Promise<T | null>
 ): Promise<T | null> {
     const redis = await getRedisClient();
 
@@ -59,7 +57,6 @@ async function getCachedData<T>(
     return null;
 }
 
-
 export async function getUserProfileAndRecentSubmissionsCached(
     event: H3Event,
     username: string,
@@ -67,7 +64,7 @@ export async function getUserProfileAndRecentSubmissionsCached(
 ): Promise<UserProfileAndRecentSubmissions | null> {
     const key = `user:${username}:profile_recent_submissions`;
     return getCachedData(event, key, REDIS_TTL_USER_PROFILE_RECENT_SUBMISSIONS,
-        (evt) => fetchUserProfileAndRecentSubmissionsFromLeetCode(evt, username, numRecentSubmission)
+        () => fetchUserProfileAndRecentSubmissionsFromLeetCode(username, numRecentSubmission)
     );
 }
 
@@ -78,7 +75,7 @@ export async function getUserCalendarCached(
 ): Promise<UserCalendar | null> {
     const key = `user:${username}:calendar:${year}`;
     return getCachedData(event, key, REDIS_TTL_USER_CALENDAR,
-        (evt) => fetchUserCalendarFromLeetCode(evt, username, year)
+        () => fetchUserCalendarFromLeetCode(username, year)
     );
 }
 
@@ -88,7 +85,7 @@ export async function getUserContestRankingCached(
 ): Promise<UserContestRanking | null> {
     const key = `user:${username}:contest_ranking`;
     return getCachedData(event, key, REDIS_TTL_USER_CONTEST_RANKING,
-        (evt) => fetchUserContestRankingFromLeetCode(evt, username)
+        () => fetchUserContestRankingFromLeetCode(username)
     );
 }
 
@@ -98,7 +95,7 @@ export async function getUserLanguageProblemCountCached(
 ): Promise<LanguageProblemCount[] | null> {
     const key = `user:${username}:language_problem_count`;
     return getCachedData(event, key, REDIS_TTL_USER_LANGUAGE_PROBLEMS,
-        (evt) => fetchUserLanguageProblemCountFromLeetCode(evt, username)
+        () => fetchUserLanguageProblemCountFromLeetCode(username)
     );
 }
 
@@ -108,25 +105,25 @@ export async function getUserQuestionProgressCached(
 ): Promise<UserQuestionProgress | null> {
     const key = `user:${username}:question_progress`;
     return getCachedData(event, key, REDIS_TTL_USER_QUESTION_PROGRESS,
-        (evt) => fetchUserQuestionProgressFromLeetCode(evt, username)
+        () => fetchUserQuestionProgressFromLeetCode(username)
     );
 }
 
 export async function getAllProblemsCountCached(
-    event: H3Event 
+    event: H3Event
 ): Promise<AllQuestionsCount[] | null> {
     const key = `global:all_problems_count`;
     return getCachedData(event, key, REDIS_TTL_ALL_PROBLEMS_COUNT,
-        (evt) => fetchAllProblemsCountFromLeetCode(evt)
+        () => fetchAllProblemsCountFromLeetCode()
     );
 }
 
 export async function getDailyCodingChallengeQuestionCached(
-    event: H3Event 
+    event: H3Event
 ): Promise<DailyChallengeQuestion | null> {
     const key = `global:daily_challenge`;
     return getCachedData(event, key, REDIS_TTL_DAILY_CHALLENGE,
-        (evt) => fetchDailyCodingChallengeQuestionFromLeetCode(evt)
+        () => fetchDailyCodingChallengeQuestionFromLeetCode()
     );
 }
 
@@ -135,7 +132,7 @@ export async function getStreakCounterCached(
 ): Promise<StreakCounter | null> {
     const key = `user_authenticated:streak_counter`;
     return getCachedData(event, key, REDIS_TTL_STREAK_COUNTER,
-        (evt) => fetchStreakCounterFromLeetCode(evt)
+        () => fetchStreakCounterFromLeetCode()
     );
 }
 
@@ -145,7 +142,7 @@ export async function getCreatedPublicFavoriteListCached(
 ): Promise<CreatedPublicFavoriteList | null> {
     const key = `user:${userSlug}:favorite_lists`;
     return getCachedData(event, key, REDIS_TTL_FAVORITE_LISTS,
-        (evt) => fetchCreatedPublicFavoriteListFromLeetCode(evt, userSlug)
+        () => fetchCreatedPublicFavoriteListFromLeetCode(userSlug)
     );
 }
 
@@ -155,20 +152,19 @@ export async function getTagProblemCountsCached(
 ): Promise<TagProblemCounts | null> {
     const key = `user:${username}:tag_problem_counts`;
     return getCachedData(event, key, REDIS_TTL_TAG_PROBLEM_COUNTS,
-        (evt) => fetchTagProblemCountsFromLeetCode(evt, username)
+        () => fetchTagProblemCountsFromLeetCode(username)
     );
 }
 
 export async function getUserStatusCached(
-    event: H3Event 
+    event: H3Event
 ): Promise<UserStatus | null> {
     // Key is global as it represents the current server's authenticated LeetCode user status
     const key = `user_authenticated:status`;
     return getCachedData(event, key, REDIS_TTL_USER_STATUS,
-        (evt) => fetchUserStatusFromLeetCode(evt)
+        () => fetchUserStatusFromLeetCode()
     );
 }
-
 
 export async function invalidateUserProfileCache(
     event: H3Event,
@@ -179,7 +175,7 @@ export async function invalidateUserProfileCache(
     // List all possible keys related to a user's profile data
     const keysToInvalidatePatterns = [
         `user:${username}:profile_recent_submissions`,
-        `user:${username}:calendar:*`, 
+        `user:${username}:calendar:*`,
         `user:${username}:contest_ranking`,
         `user:${username}:language_problem_count`,
         `user:${username}:question_progress`,
@@ -194,7 +190,7 @@ export async function invalidateUserProfileCache(
 
     for (const pattern of keysToInvalidatePatterns) {
         if (pattern.includes('*')) {
-            
+
             // redis.scan() in a loop to find keys incrementally?
             const matchingKeys = await redis.keys(pattern);
             specificKeysToDelete.push(...matchingKeys);

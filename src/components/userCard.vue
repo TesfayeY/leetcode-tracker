@@ -4,13 +4,12 @@
     <template #header>
       <div class="flex flex-row justify-start gap-4">
         <p class="text-left text-3xl">Leetcode Profile {{ viewYear }}</p>
-        <span v-if="isProfileVerified" class="bg-blue-100 text-blue-800 text-xs px-2 py-1 h-fit rounded">Verified</span>
         <UButton
-          v-bind:disabled="viewYear === activeYears?.[activeYears.length - 1] || activeYears.length === 0"
+          v-bind:disabled="viewYear === activeYears?.[activeYears.length - 1] || activeYears.length === 0 || isLoadingCalendar" 
           @click="handleYearChange(true)"
         >Previous year</UButton>
         <UButton
-          v-bind:disabled="viewYear === activeYears?.[0] || activeYears.length === 0"
+          v-bind:disabled="viewYear === activeYears?.[0] || activeYears.length === 0 || isLoadingCalendar" 
           @click="handleYearChange(false)"
         >Next Year</UButton>
       </div>
@@ -25,7 +24,10 @@
           ></img>
         </div>
         <div class="flex items-start flex-col">
-          <p class="text-black text-2xl text-center font-bold mb-2">{{ toRaw(userData.matchedUser?.username) }}</p>
+          <div class="flex flex-row place-content-center gap-2">
+            <p class="text-black text-2xl text-center font-bold mb-2">{{ toRaw(userData.matchedUser?.username) }}</p>
+            <span v-if="isProfileVerified" class="bg-blue-200 text-blue-800 text-xs px-2 py-1 h-fit rounded">Verified</span>
+          </div>
           <p class="text-black text-2xl text-center">Problem solved: {{ toRaw(userData.matchedUser?.submitStats?.totalSubmissionNum?.[0]?.count) }}</p>
           <p class="text-black text-2xl text-center">Ranking: {{ toRaw(userData.matchedUser?.profile?.ranking) }}</p>
           <p class="text-black text-2xl text-center">Max streak: {{ toRaw(userData.matchedUser?.userCalendar?.streak) }}</p>
@@ -115,7 +117,6 @@ const isLoadingCalendar = ref(true);
 const viewYear = ref(new Date().getFullYear()); 
 const activeYears = ref([]);              
 
-
 const userData = reactive({
   matchedUser: {
     profile: {},
@@ -137,8 +138,8 @@ const problemData = reactive({
 onMounted(async () => {
   await fetchUserProfile();
   await fetchAllProblemCounts();
-  console.log('Final userData (after fetches):', toRaw(userData)); 
-  console.log('Final problemData (after fetches):', toRaw(problemData)); 
+  // console.log('Final userData (after fetches):', toRaw(userData)); 
+  // console.log('Final problemData (after fetches):', toRaw(problemData)); 
   isLoadingState.value = false;
 })
 
