@@ -21,6 +21,7 @@ export default defineNuxtConfig({
       appWorkerPassword: process.env.APP_WORKER_PASSWORD,
     },
     public: {
+      messageEncryptionKey: process.env.APP_MESSAGE_ENCRYPT_KEY,
       sentry: {
         dsnClient: process.env.SENTRY_DSN_FRONTEND,
         dsnApi: process.env.SENTRY_DSN_BACKEND,

@@ -1,6 +1,7 @@
 import prisma from '../../database/db';
 import { parseCookies, H3Event, getQuery, readBody, createError } from 'h3';
 import { extractUserIdFromToken } from '../../jwt';
+import { MAX_MESSAGE_CHARACTER } from '../../constants/appConst';
 
 async function getInboxFromUserId(userId: number) {
   const allUserInbox = await prisma.inbox.findMany({
@@ -81,6 +82,10 @@ export async function createUserInboxMessage(event: H3Event) {
   const recipientUsername = body.recipientUsername;
   const messageContent = body.messageContent;
   const isInvitation = body.isInvitation;
+
+  if (messageContent.length > MAX_MESSAGE_CHARACTER || recipientUsername.length > MAX_MESSAGE_CHARACTER) {
+    throw createError({ statusCode: 400, statusMessage: 'Maximum character exceeded.' });
+  }
 
   try {
     // Get the recipient user id

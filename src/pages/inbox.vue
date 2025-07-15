@@ -38,7 +38,7 @@
           <UInput v-model="userInputField" type="text" required class="mb-2 w-full"></UInput>
         </div>
         <UDivider size="sm"  class="mt-2 w-full"></UDivider>
-        <UTextarea v-model="messageInputField" size="xl" variant="outline" placeholder="Message..." required class="mt-2"></UTextarea>
+        <UTextarea v-model="messageInputField" size="xl" variant="outline" placeholder="Message... (Max 300 characters)" required class="mt-2"></UTextarea>
       </UFormGroup>
       <p v-if="errorInfo !== null" class="font-bold mt-5" style="color: red;">{{ errorInfo.statusMessage }}</p>
       <template #footer>
@@ -87,6 +87,7 @@
 import { ref, onBeforeMount } from 'vue';
 import { NUM_INBOX_DEFAULT_DISPLAY } from '~/constants/appConst';
 import { useErrorLogger } from '~/composables/useErrorLogger';
+import { encryptSymmetric, descryptSymmetric } from '~/composables/encryption';
 import ConfirmationModal from '~/components/confirmationModal.vue';
 
 definePageMeta({
@@ -97,7 +98,8 @@ definePageMeta({
 const { reportError }= useErrorLogger();
 const token = useCookie('token');
 const page = ref(1);
-const pageCount = NUM_INBOX_DEFAULT_DISPLAY; 
+const pageCount = NUM_INBOX_DEFAULT_DISPLAY;
+const runtimeConfig = useRuntimeConfig();
 
 const userInputField = ref('');
 const messageInputField = ref('');
@@ -128,7 +130,7 @@ const columns = ref([
   {
     key: 'context',
     label: 'Message',
-    class: 'w-[80vw]'
+    class: 'w-[80vw]',
   },
   {
     key: 'acknowledgement',
@@ -143,6 +145,8 @@ const columns = ref([
 ]);
 
 const searchQuery = ref('')
+
+// Display only the filtered rows on search query and pagination
 const filteredRows = computed(() => {
   if (!searchQuery.value) {
     return toRaw(inboxes.value).slice((page.value - 1) * pageCount, (page.value) * pageCount);
@@ -251,11 +255,12 @@ const handleSendMessage = async () => {
     
     await fetchUserMessage('POST', null, {
       recipientUsername: userInputField.value,
-      messageContent: messageInputField.value,
+      messageContent: await encryptSymmetric(runtimeConfig.public.messageEncryptionKey.toString(), messageInputField.value),
       isInvitation: false
     });
     
   } catch(error: any) {
+    console.log(error)
     errorInfo.value = error;
   }
 }
@@ -274,8 +279,15 @@ async function fetchUserInbox() {
       throw createError({ statusCode: 400, message: 'Bad request' });
     }
 
-    inboxes.value = response.data;
-    // console.log(toRaw(inboxes.value));
+    // Decrypt the message content. Wait for all decrypted messages done before assigning to inboxes
+    const decryptionPromises = response.data.map(async (element: any) => {
+      return {
+        ...element,
+        context: await descryptSymmetric(runtimeConfig.public.messageEncryptionKey.toString(), element.context)
+      }
+    });
+
+    inboxes.value = await Promise.all(decryptionPromises);
   }
   catch (error: any) {
     errorInfo.value = error;
@@ -299,8 +311,16 @@ async function fetchUserMessage(method: 'POST' | 'GET' | 'PUT' | 'DELETE', inbox
     if (response === null) {
       throw createError({ statusCode: 400, message: 'Bad request' });
     }
+    
+    // Decrypt the message content. Wait for all decrypted messages done before assigning to inboxes
+    const decryptionPromises = response.data.map(async (element: any) => {
+      return {
+        ...element,
+        context: await descryptSymmetric(runtimeConfig.public.messageEncryptionKey.toString(), element.context)
+      }
+    });
 
-    inboxes.value = response.data;
+    inboxes.value = await Promise.all(decryptionPromises);
     closeModal();
   }
   catch (error: any) {

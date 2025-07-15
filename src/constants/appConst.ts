@@ -1,5 +1,6 @@
 export const NUM_LANGUAGE_DISPLAY: number = 3;
 export const NUM_INBOX_DEFAULT_DISPLAY: number = 5;
+export const MAX_MESSAGE_CHARACTER: number = 300;
 export const LEETCODE_SESSION_INSTRUCTION: string = 
 `You can obtain the Leetcode Session 
 by after login to Leetcode and open Browser Inspection, 
