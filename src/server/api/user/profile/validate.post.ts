@@ -10,10 +10,14 @@ export default defineEventHandler(async (event) => {
 
   const body = await readBody(event);
 
+  if ('streak' in body) {
+    return validateLeetcodeUsername(event, "getUserStreak");
+  }
+
   if ('sessionToken' in body) {
     return validateLeetcodeUsername(event, "getUserSession");
-  } else {
-    event.res.statusCode = 400;
-    return { message: 'Missing fields' };
   }
+
+  event.res.statusCode = 400;
+  return { message: 'Missing fields' };
 });

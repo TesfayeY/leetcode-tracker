@@ -115,10 +115,8 @@ const handleValidateProfile = async (modalValue: string) => {
       body: { sessionToken: modalValue }
     });
 
-    console.log
-
     if (response.data) {
-      isProfileVerified.value = response.data.isVerified;
+      isProfileVerified.value = response.data.isSignedIn;
     }
     
     closeModal();

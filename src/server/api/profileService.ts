@@ -19,12 +19,12 @@ export async function getLeetcodeProfile(event: H3Event, queryFile: string) {
   try {
     const query = readGraphqlFiles(queryFile);
     let variables = queryFile.includes("ActiveDays") ? { username: username, year: year } : { username: username };
-    
+
     // CORRECTED: Pass 'event' as the first argument
     const response = await graphqlFetch(query, variables);
 
     if (response.data.matchedUser === null) {
-      throw createError({statusCode: 404, statusMessage: "Leetcode user not found" });
+      throw createError({ statusCode: 404, statusMessage: "Leetcode user not found" });
     }
 
     if (response.data.matchedUser.profile !== undefined && userId !== undefined) { // Add userId check
@@ -44,7 +44,7 @@ export async function getLeetcodeProfile(event: H3Event, queryFile: string) {
 
     return { data: response.data, message: 'Successfully retrieve Leetcode profile' };
 
-  } catch(error: any) {
+  } catch (error: any) {
     console.error('Error in getLeetcodeProfile:', error); // Log the error for debugging
     throw error;
   }
@@ -61,26 +61,26 @@ export async function addLeetcodeUsername(event: H3Event, queryFile: any) {
   const newProfileVerified = body.isProfileVerified;
 
   // Ensure checkSelf also receives all necessary arguments if its signature requires userId
-  if(!(await checkSelf(queryParams.username?.toString(), userId))) { // Add nullish coalescing
+  if (!(await checkSelf(queryParams.username?.toString(), userId))) { // Add nullish coalescing
     throw createError({ statusCode: 401, statusMessage: 'User is unauthorized to perform this action' })
   }
 
   if (!newUserName) {
-      throw createError({statusCode: 400, statusMessage: "Missing Fields" });
+    throw createError({ statusCode: 400, statusMessage: "Missing Fields" });
   }
 
   if (userId === undefined) {
-      throw createError({statusCode: 401, statusMessage:'Invalid user'});
+    throw createError({ statusCode: 401, statusMessage: 'Invalid user' });
   }
 
   const user = await prisma.user.findUnique({ where: { id: userId } });
 
   if (!user) {
-      throw createError({statusCode: 401, statusMessage:'Invalid user'});
+    throw createError({ statusCode: 401, statusMessage: 'Invalid user' });
   }
 
   if (newUserName === user.lcUsername) { // Compare with lcUsername, not 'name'
-    throw createError({statusCode: 400, statusMessage:'LeetCode username is already in use by this account'});
+    throw createError({ statusCode: 400, statusMessage: 'LeetCode username is already in use by this account' });
   }
 
   //Check leetcode profile is legitimate
@@ -90,9 +90,9 @@ export async function addLeetcodeUsername(event: H3Event, queryFile: any) {
     const response = await graphqlFetch(query, { username: newUserName });
 
     if (response.data.matchedUser === null) {
-      throw createError({statusCode: 404, statusMessage: "Leetcode user not found" });
+      throw createError({ statusCode: 404, statusMessage: "Leetcode user not found" });
     }
-    
+
     await prisma.user.update({
       where: {
         id: userId
@@ -106,10 +106,18 @@ export async function addLeetcodeUsername(event: H3Event, queryFile: any) {
 
     return { message: 'User Profile added successfully' };
 
-  } catch(error: any) {
+  } catch (error: any) {
     console.error('Error in addLeetcodeUsername:', error); // Log the error for debugging
     throw error;
   }
+}
+
+export async function getStreakCount(event: H3Event, queryFile: any) {
+  const cookies = parseCookies(event);
+  const extractedUserId = await extractUserIdFromToken(cookies.token);
+  const userId = extractedUserId !== null ? extractedUserId : undefined;
+  const queryParams = getQuery(event);
+
 }
 
 export async function validateLeetcodeUsername(event: H3Event, queryFile: any) {
@@ -119,10 +127,24 @@ export async function validateLeetcodeUsername(event: H3Event, queryFile: any) {
   const queryParams = getQuery(event);
 
   const body = await readBody(event);
-  const sessionToken = body.sessionToken;
+  let sessionToken = body.sessionToken;
+
+  // If no session token provided, try to get the one in database
+  if (sessionToken.length === 0) {
+    const user = await prisma.user.findUnique({
+      where: {
+        id: userId
+      },
+    })
+
+    if (user) {
+      sessionToken = user.lcSessionToken;
+    }
+  }
+
   let csrf = '';
 
-  if(!(await checkSelf(queryParams.username?.toString(), userId))) { // Add nullish coalescing
+  if (!(await checkSelf(queryParams.username?.toString(), userId))) { // Add nullish coalescing
     throw createError({ statusCode: 401, statusMessage: 'User is unauthorized to perform this action' })
   }
 
@@ -131,11 +153,11 @@ export async function validateLeetcodeUsername(event: H3Event, queryFile: any) {
     const query = readGraphqlFiles('getUserSession');
     const response = await graphqlHeaderFetch(query);
     csrf = response.headers?.getSetCookie()?.[0]?.split(';')[0]?.split('=')[1] || ''; // Add null checks
-  } catch (error:any) {
+  } catch (error: any) {
     console.error('Error fetching CSRF token:', error); // Log the error for debugging
     throw error;
   }
-  
+
   // Fetch the global state of user
   try {
     const query = readGraphqlFiles(queryFile);
@@ -146,12 +168,12 @@ export async function validateLeetcodeUsername(event: H3Event, queryFile: any) {
     }
 
     // Check if the token is valid
-    if (response.data.userStatus.userId === null) {
-      throw createError({ statusCode: 400, statusMessage: 'Invalid token, please check again'});
+    if (!('streak' in body) && response.data.userStatus.userId === null) {
+      throw createError({ statusCode: 400, statusMessage: 'Invalid token, please check again' });
     }
 
     // Check if the username entered is the same as the retrieval name
-    if (response.data.userStatus.username !== queryParams.lcUsername?.toString()) { // Add nullish coalescing
+    if (!('streak' in body) && response.data.userStatus.username !== queryParams.lcUsername?.toString()) { // Add nullish coalescing
       throw createError({ statusCode: 404, statusMessage: 'User does not match' });
     }
 
@@ -166,10 +188,7 @@ export async function validateLeetcodeUsername(event: H3Event, queryFile: any) {
       }
     })
 
-    // Fetch the user account back
-    const userAccountResponse = await getUserData(event)
-    
-    return userAccountResponse;
+    return response;
   } catch (error: any) {
     console.error('Error in validateLeetcodeUsername:', error); // Log the error for debugging
     throw error;
