@@ -1,5 +1,6 @@
 import { encryptSymmetric } from '~/composables/encryption';
 import { useErrorLogger } from '~/composables/useErrorLogger';
+import { LEETCODE_BASE_URL } from '~/constants/leetcodeConst';
 
 export default defineNuxtPlugin({
   enforce: 'pre',
@@ -12,7 +13,7 @@ export default defineNuxtPlugin({
       const latestCheckinToken = useCookie('latestCheckinToken');
       const latestDailyProblemToken = useCookie('latestDailyProblemToken');
       const userPreferences = useCookie('preference');
-      
+
       // These notification cookie should not depends on the validity of JWT. 
       // Expired JWT still retain in the session storage as a string. Auto notification should not be affected.
       // Auto notification only halts for browser with empty session storage or the user deliberately log out from the application.
@@ -20,7 +21,7 @@ export default defineNuxtPlugin({
         console.log('Logged out! No notification scheduled');
         return;
       }
-      
+
       // Check if the user's notification tokens has been set in the browser
       // If the JWT is expired, the tokens are still retained from the previous JWT session upon logging in.
       // If the user changed their preferences, these cookie would be set to the newest change on the settings.vue.
@@ -34,21 +35,21 @@ export default defineNuxtPlugin({
               'Authorization': `Bearer ${token}`,
             }
           });
-          
+
           if (response.data) {
             latestDailyProblemToken.value = (new Date(response.data.autoProblemDatetime)).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false });
             latestCheckinToken.value = (new Date(response.data.autoCheckinDatetime)).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false });
             latestStreakToken.value = (new Date(response.data.autoStreakDatetime)).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false });
-            userPreferences.value = { 
+            userPreferences.value = {
               daily: response.data.isProblemNotify,
               checkin: response.data.isCheckinNotify,
               streak: response.data.isStreakNotify
             };
           }
 
-        } catch(error: any) {
+        } catch (error: any) {
           console.log(error);
-          reportError(error, { session: 'autoNotification', context_type: 'scheduler'  })
+          reportError(error, { session: 'autoNotification', context_type: 'scheduler' })
         }
       }
 
@@ -57,7 +58,7 @@ export default defineNuxtPlugin({
         await checkIntervalStatus(latestDailyProblemToken.value, 'latestDailyProblemNotification');
         scheduleInterval(latestDailyProblemToken.value, 'latestDailyProblemNotification');
       }
-      
+
       if (toRaw(userPreferences.value).checkin) {
         await checkIntervalStatus(latestCheckinToken.value, 'latestCheckinNotification');
         scheduleInterval(latestCheckinToken.value, 'latestCheckinNotification');
@@ -68,7 +69,7 @@ export default defineNuxtPlugin({
         scheduleInterval(latestStreakToken.value, 'latestStreakNotification');
       }
     });
-  } 
+  }
 });
 
 async function checkIntervalStatus(userChosenHour: string, tokenStorageName: string) {
@@ -122,15 +123,79 @@ function scheduleInterval(userChosenHour: string, tokenStorageName: string) {
 }
 
 async function sendNotification(typeNotification: string) {
+  const { reportError } = useErrorLogger();
+  const token = useCookie('token');
+  const user = useCookie('user');
+
   switch (typeNotification) {
     case 'STREAKNOTIFICATION':
-      sendInboxMessage('Hey, your are currently on streak day. Continue on!');
-      break; 
+      try {
+        const response = await $fetch(`/api/user/profile/validate?lcUsername=${user.value.lcUsername}&username=${user.value.email}`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`,
+          },
+          body: {
+            streak: '',
+            sessionToken: ''
+          }
+        });
+
+        if (response.data) {
+          sendInboxMessage(`Hey, your are currently on ${response.data.streakCounter.streakCount} streak days. Continue on!`);
+        }
+      } catch (error: any) {
+        reportError(error, { section: `users/${user.email}` });
+      }
+
+
+      break;
     case 'CHECKINNOTIFICATION':
-      sendInboxMessage('Hi user, you have not check in yet fo today');
+      // Get user session token
+      try {
+        const response = await $fetch(`/api/user/profile/validate?lcUsername=${user.value.lcUsername}&username=${user.value.email}`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`,
+          },
+          body: {
+            sessionToken: ''
+          }
+        });
+
+        if (response.data) {
+          if (!response.data.userStatus.checkedInToday) {
+            sendInboxMessage(`Hi ${response.data.userStatus.realName}, you have not check in yet for today`);
+          }
+        }
+      } catch (error: any) {
+        reportError(error, { section: `users/${user.email}` });
+      }
+
       break;
     case 'DAILYPROBLEMNOTIFICATION':
-      sendInboxMessage('You daily Leetcode problem is ...');
+      // Get daily problem from leetcode graphql
+      try {
+        const response = await $fetch(`/api/problem/daily`, {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+          }
+        });
+
+        const problemTitle = response.data.activeDailyCodingChallengeQuestion.question.title;
+        const problemDate = response.data.activeDailyCodingChallengeQuestion.date;
+        const difficulty = response.data.activeDailyCodingChallengeQuestion.question.difficulty;
+        const problemUrl = response.data.activeDailyCodingChallengeQuestion.link;
+
+        sendInboxMessage(`Daily Problem: Today is an ${difficulty.toLowerCase()} problem about ${problemTitle}. 
+                        ---> ${LEETCODE_BASE_URL}${problemUrl}`);
+      } catch (error: any) {
+        reportError(error, { section: `users/${user.email}` });
+      }
+
       break;
     default:
       break;
@@ -160,6 +225,6 @@ async function sendInboxMessage(content: string) {
   }
   catch (error: any) {
     console.log(error);
-    reportError(error, { section : `scheduler`});
+    reportError(error, { section: `scheduler` });
   }
 }

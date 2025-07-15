@@ -13,12 +13,12 @@ export async function getLeetcodeProblem(event: H3Event, queryFile: any) {
     const response = await graphqlFetch(query, {});
 
     if (response.data === null) {
-      throw createError({statusCode: 404, statusMessage: "Leetcode problem not found" });
+      throw createError({ statusCode: 404, statusMessage: "Leetcode problem not found" });
     }
 
     return { data: response.data, message: 'Sucessfully retrieve Leetcode problem' };
 
-  } catch(error: any) {
+  } catch (error: any) {
     throw error;
   }
 }

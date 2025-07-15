@@ -8,5 +8,5 @@ export default defineEventHandler(async (event) => {
     return { message: 'Method not allowed' };
   }
 
-  return getLeetcodeProblem(event, 'getAllProblemsCount');
+  return getLeetcodeProblem(event, 'getDailyProblem');
 });

@@ -5,258 +5,259 @@ import { createJwtToken, extractUserIdFromToken } from '../../jwt';
 import { checkSelf } from '../utils/checkSelf';
 
 export async function getUserData(event: H3Event) {
-  const cookies = parseCookies(event);
-  const extractedUserId = await extractUserIdFromToken(cookies.token);
-  const userId = extractedUserId !== null ? extractedUserId : undefined;
-  const queryParams = getQuery(event);
+	const cookies = parseCookies(event);
+	const extractedUserId = await extractUserIdFromToken(cookies.token);
+	const userId = extractedUserId !== null ? extractedUserId : undefined;
+	const queryParams = getQuery(event);
 	const username = queryParams.username.toString();
 
-  const isSelf = await checkSelf(username, userId);
+	const isSelf = await checkSelf(username, userId);
 
-  const user = await prisma.user.findUnique({ 
-    where: { 
-      email: username
-    } 
-  });
+	const user = await prisma.user.findUnique({
+		where: {
+			email: username
+		}
+	});
 
-  if (!user) {
-      throw createError({statusCode: 401, statusMessage:'Invalid user'});
-  }
+	if (!user) {
+		throw createError({ statusCode: 401, statusMessage: 'Invalid user' });
+	}
 
-  if (userId === undefined) {
-    throw createError({statusCode: 401, statusMessage:'Invalid user'});
-  }
+	if (userId === undefined) {
+		throw createError({ statusCode: 401, statusMessage: 'Invalid user' });
+	}
 
-  return { 
-    data: { 
-      id: user.id, 
-      name: user.name, 
-      lcUsername: user.lcUsername, 
-      isVerified: user.isProfileVerified,
-      isSelf: isSelf 
-    }, 
-    message: "Successfully retrieve user" 
-  }
+	return {
+		data: {
+			id: user.id,
+			name: user.name,
+			lcUsername: user.lcUsername,
+			isVerified: user.isProfileVerified,
+			isSelf: isSelf
+		},
+		message: "Successfully retrieve user"
+	}
 }
 
 export async function changeDisplayName(event: H3Event) {
-    const body = await readBody(event);
-    const { newName } = body;
+	const body = await readBody(event);
+	const { newName } = body;
 
-    if (!newName) {
-        throw createError({statusCode: 400, statusMessage:'Missing fields'});
-    }
+	if (!newName) {
+		throw createError({ statusCode: 400, statusMessage: 'Missing fields' });
+	}
 
-    const cookies = parseCookies(event);
-    const extractedUserId = await extractUserIdFromToken(cookies.token);
-    const userId = extractedUserId !== null ? extractedUserId : undefined;
+	const cookies = parseCookies(event);
+	const extractedUserId = await extractUserIdFromToken(cookies.token);
+	const userId = extractedUserId !== null ? extractedUserId : undefined;
 
-    if (userId === undefined) {
-        throw createError({statusCode: 401, statusMessage:'Invalid user'});
-    }
+	if (userId === undefined) {
+		throw createError({ statusCode: 401, statusMessage: 'Invalid user' });
+	}
 
-    const user = await prisma.user.findUnique({ where: { id: userId } });
+	const user = await prisma.user.findUnique({ where: { id: userId } });
 
-    if (!user) {
-        throw createError({statusCode: 401, statusMessage:'Invalid user'});
-    }
+	if (!user) {
+		throw createError({ statusCode: 401, statusMessage: 'Invalid user' });
+	}
 
-    if (newName === user.name) {
-        throw createError({statusCode: 400, statusMessage:'Name is already in use'});
-    }
+	if (newName === user.name) {
+		throw createError({ statusCode: 400, statusMessage: 'Name is already in use' });
+	}
 
-    await prisma.user.update({ where: { id: userId }, data: { name: newName } });
+	await prisma.user.update({ where: { id: userId }, data: { name: newName } });
 
-    const newToken = await createJwtToken(user.id);
-    setCookie(event, 'token', newToken);
-    setCookie(event, 'name', newName);
+	const newToken = await createJwtToken(user.id);
+	setCookie(event, 'token', newToken);
+	setCookie(event, 'name', newName);
 
-    return { message: 'Name changed successfully', newName };
+	return { message: 'Name changed successfully', newName };
 }
 
 
 export async function changeEmail(event: H3Event) {
 
-    const body = await readBody(event);
+	const body = await readBody(event);
 
-    const { currentEmail, newEmail, confirmedNewEmail } = body;
+	const { currentEmail, newEmail, confirmedNewEmail } = body;
 
-    // Validate presence of all required fields
-    if (!currentEmail || !newEmail || !confirmedNewEmail) {
-        throw createError({statusCode: 400, statusMessage:'Missing fields'});
-    }
+	// Validate presence of all required fields
+	if (!currentEmail || !newEmail || !confirmedNewEmail) {
+		throw createError({ statusCode: 400, statusMessage: 'Missing fields' });
+	}
 
-    // Check if newEmail and confirmedNewEmail match
-    if (newEmail !== confirmedNewEmail) {
-        throw createError({statusCode: 400, statusMessage:'Emails do not match'});
-    }
-    
-    // Parse the cookies from the request headers
-    const cookies = parseCookies(event);
-    const extractedUserId = await extractUserIdFromToken(cookies.token);
-    const userId = extractedUserId !== null ? extractedUserId : undefined;
+	// Check if newEmail and confirmedNewEmail match
+	if (newEmail !== confirmedNewEmail) {
+		throw createError({ statusCode: 400, statusMessage: 'Emails do not match' });
+	}
 
-    if (userId === undefined) {
-        throw createError({statusCode: 401, statusMessage:'Invalid user'});
-    }
+	// Parse the cookies from the request headers
+	const cookies = parseCookies(event);
+	const extractedUserId = await extractUserIdFromToken(cookies.token);
+	const userId = extractedUserId !== null ? extractedUserId : undefined;
 
-    const user = await prisma.user.findUnique({
-        where: { id: userId },
-    });
+	if (userId === undefined) {
+		throw createError({ statusCode: 401, statusMessage: 'Invalid user' });
+	}
 
-    console.log(userId);
+	const user = await prisma.user.findUnique({
+		where: { id: userId },
+	});
 
-    // Check if user exists
-    if (!user) {
-        throw createError({statusCode: 401, statusMessage:'Invalid user'});
-    }
+	console.log(userId);
 
-    // Compare currentEmail with the email stored in the database
-    const isEmailValid = currentEmail === user.email;        
+	// Check if user exists
+	if (!user) {
+		throw createError({ statusCode: 401, statusMessage: 'Invalid user' });
+	}
 
-    if (!isEmailValid) {
-        throw createError({statusCode: 400, statusMessage:'Invalid email'});
-    }
+	// Compare currentEmail with the email stored in the database
+	const isEmailValid = currentEmail === user.email;
 
-    // Check if the new email is already being used by another user
-    const emailInUse = await prisma.user.findUnique({
-        where: { email: newEmail },
-    });
+	if (!isEmailValid) {
+		throw createError({ statusCode: 400, statusMessage: 'Invalid email' });
+	}
 
-    if (emailInUse) {
-        throw createError({statusCode: 400, statusMessage:'Email is already in use'});
-    }
+	// Check if the new email is already being used by another user
+	const emailInUse = await prisma.user.findUnique({
+		where: { email: newEmail },
+	});
 
-    // Update user's email in the database
-    await prisma.user.update({
-        where: { id: userId },
-        data: { email: confirmedNewEmail },
-    });
+	if (emailInUse) {
+		throw createError({ statusCode: 400, statusMessage: 'Email is already in use' });
+	}
 
-    setCookie(event, "token", "", { maxAge: -1 }); // Correctly remove the token cookie
-    setCookie(event, "user", "", { maxAge: -1 }); // Correctly remove the user cookie
+	// Update user's email in the database
+	await prisma.user.update({
+		where: { id: userId },
+		data: { email: confirmedNewEmail },
+	});
 
-    return { message: 'Email changed successfully',
-            success: false
-    }
-    
+	setCookie(event, "token", "", { maxAge: -1 }); // Correctly remove the token cookie
+	setCookie(event, "user", "", { maxAge: -1 }); // Correctly remove the user cookie
+
+	return {
+		message: 'Email changed successfully',
+		success: false
+	}
+
 };
 
-export async function changePassword(event: H3Event) { 
+export async function changePassword(event: H3Event) {
 
-    const body = await readBody(event);
+	const body = await readBody(event);
 
-    const { currentPassword, newPassword, confirmedNewPassword } = body;
+	const { currentPassword, newPassword, confirmedNewPassword } = body;
 
-    // Validate presence of all required fields
-    if (!currentPassword || !newPassword || !confirmedNewPassword) {
-        throw createError({statusCode: 400, statusMessage:'Missing fields'});
-    }
+	// Validate presence of all required fields
+	if (!currentPassword || !newPassword || !confirmedNewPassword) {
+		throw createError({ statusCode: 400, statusMessage: 'Missing fields' });
+	}
 
-    // Check if newPassword and confirmedNewPassword match
-    if (newPassword !== confirmedNewPassword) {
-        throw createError({statusCode: 400, statusMessage:'Passwords do not match'});
-    }
+	// Check if newPassword and confirmedNewPassword match
+	if (newPassword !== confirmedNewPassword) {
+		throw createError({ statusCode: 400, statusMessage: 'Passwords do not match' });
+	}
 
-    //Parse the cookies from the request headers
-    const cookies = parseCookies(event);
-    const extractedUserId = await extractUserIdFromToken(cookies.token);
-    const userId = extractedUserId !== null ? extractedUserId : undefined;
+	//Parse the cookies from the request headers
+	const cookies = parseCookies(event);
+	const extractedUserId = await extractUserIdFromToken(cookies.token);
+	const userId = extractedUserId !== null ? extractedUserId : undefined;
 
-    if (userId === undefined) {
-        throw createError({statusCode: 401, statusMessage:'Invalid user'});
-    }
+	if (userId === undefined) {
+		throw createError({ statusCode: 401, statusMessage: 'Invalid user' });
+	}
 
-    const user = await prisma.user.findUnique({
-        where: { id: userId },
-    });
-    // Check if user exists
-    if (!user) {
-        throw createError({statusCode: 401, statusMessage:'Invalid user'});
-    }
+	const user = await prisma.user.findUnique({
+		where: { id: userId },
+	});
+	// Check if user exists
+	if (!user) {
+		throw createError({ statusCode: 401, statusMessage: 'Invalid user' });
+	}
 
-    // Verify current password with the hashed password stored in the database
-    const isPasswordValid = await bcrypt.compare(currentPassword, user.password);
+	// Verify current password with the hashed password stored in the database
+	const isPasswordValid = await bcrypt.compare(currentPassword, user.password);
 
-    if (!isPasswordValid) {
-        throw createError({statusCode: 400, statusMessage:'Invalid password'});
-    }
+	if (!isPasswordValid) {
+		throw createError({ statusCode: 400, statusMessage: 'Invalid password' });
+	}
 
-    // Hash the new password
-    const hashedNewPassword = await bcrypt.hash(newPassword, 10);
+	// Hash the new password
+	const hashedNewPassword = await bcrypt.hash(newPassword, 10);
 
-    // Update user's password in the database
-    await prisma.user.update({
-        where: { id: userId },
-        data: { password: hashedNewPassword },
-    });
+	// Update user's password in the database
+	await prisma.user.update({
+		where: { id: userId },
+		data: { password: hashedNewPassword },
+	});
 
-    setCookie(event, "token", "", { maxAge: -1 }); // Correctly remove the token cookie
-    setCookie(event, "user", "", { maxAge: -1 }); // Correctly remove the user cookie
+	setCookie(event, "token", "", { maxAge: -1 }); // Correctly remove the token cookie
+	setCookie(event, "user", "", { maxAge: -1 }); // Correctly remove the user cookie
 
-    return { message: 'Password changed successfully' };
-    
+	return { message: 'Password changed successfully' };
+
 };
 
 export async function deleteAccount(event: H3Event) {
 
-    const body = await readBody(event);
+	const body = await readBody(event);
 
-    const { email, password, confirmedPassword } = body;
+	const { email, password, confirmedPassword } = body;
 
-    // Validate presence of all required fields
-    if (!email || !password || !confirmedPassword) {
-        throw createError({statusCode: 400, statusMessage:'Missing fields'});
-    }
+	// Validate presence of all required fields
+	if (!email || !password || !confirmedPassword) {
+		throw createError({ statusCode: 400, statusMessage: 'Missing fields' });
+	}
 
-    // Check if currentPassword and confirmedCurrentPassword match
-    if (password !== confirmedPassword) {
-        throw createError({statusCode: 400, statusMessage:'Passwords do not match'});
-    }
+	// Check if currentPassword and confirmedCurrentPassword match
+	if (password !== confirmedPassword) {
+		throw createError({ statusCode: 400, statusMessage: 'Passwords do not match' });
+	}
 
-    // Parse the cookies from the request headers
-    const cookies = parseCookies(event);
-    const extractedUserId = await extractUserIdFromToken(cookies.token);
-    const userId = extractedUserId !== null ? extractedUserId : undefined;
+	// Parse the cookies from the request headers
+	const cookies = parseCookies(event);
+	const extractedUserId = await extractUserIdFromToken(cookies.token);
+	const userId = extractedUserId !== null ? extractedUserId : undefined;
 
-    if (userId === undefined) {
-        throw createError({statusCode: 401, statusMessage:'Invalid user'});
-    }
+	if (userId === undefined) {
+		throw createError({ statusCode: 401, statusMessage: 'Invalid user' });
+	}
 
-    const user = await prisma.user.findUnique({
-        where: { id: userId },
-    });
+	const user = await prisma.user.findUnique({
+		where: { id: userId },
+	});
 
-    // Check if user exists
-    if (!user) {
-        throw createError({statusCode: 401, statusMessage:'Invalid user'});
-    }
+	// Check if user exists
+	if (!user) {
+		throw createError({ statusCode: 401, statusMessage: 'Invalid user' });
+	}
 
-    if (user.email !== email ) {
-        throw createError({statusCode: 400, statusMessage:'Invalid email'});
-    }
+	if (user.email !== email) {
+		throw createError({ statusCode: 400, statusMessage: 'Invalid email' });
+	}
 
-    // Compare email with the email stored in the database
-    const isEmailValid = email === user.email;
+	// Compare email with the email stored in the database
+	const isEmailValid = email === user.email;
 
-    if (!isEmailValid) {
-        throw createError({statusCode: 401, statusMessage:'Invalid email'});
-    }
+	if (!isEmailValid) {
+		throw createError({ statusCode: 401, statusMessage: 'Invalid email' });
+	}
 
-    // Verify current password with the hashed password stored in the database
-    const isPasswordValid = await bcrypt.compare(password, user.password);
+	// Verify current password with the hashed password stored in the database
+	const isPasswordValid = await bcrypt.compare(password, user.password);
 
-    if (!isPasswordValid) {
-        throw createError({statusCode: 401, statusMessage:'Invalid password'});
-    }
+	if (!isPasswordValid) {
+		throw createError({ statusCode: 401, statusMessage: 'Invalid password' });
+	}
 
-    // Delete user from the database
-    await prisma.user.delete({
-        where: { id: userId },
-    });
+	// Delete user from the database
+	await prisma.user.delete({
+		where: { id: userId },
+	});
 
-    setCookie(event, "token", "", { maxAge: -1 }); // Correctly remove the token cookie
-    setCookie(event, "user", "", { maxAge: -1 }); // Correctly remove the user cookie
+	setCookie(event, "token", "", { maxAge: -1 }); // Correctly remove the token cookie
+	setCookie(event, "user", "", { maxAge: -1 }); // Correctly remove the user cookie
 
-    return { message: 'Account deleted successfully' };
+	return { message: 'Account deleted successfully' };
 };

@@ -73,15 +73,15 @@
             </div>
             <div class="flex flex row justify-between ml-10">
               <p>Push to Inbox</p>
-              <UToggle v-model="isInboxSelected" @change="handleIndividualToggle('isInboxNotify', isInboxSelected)"></UToggle>
+              <UToggle disabled v-model="isInboxSelected" @change="handleIndividualToggle('isInboxNotify', isInboxSelected)"></UToggle>
             </div>
             <div class="flex flex row justify-between ml-10">
               <p>Push to Email</p>
-              <UToggle v-model="isEmailSelected" @change="handleIndividualToggle('isEmailNotify', isEmailSelected)"></UToggle>
+              <UToggle disabled v-model="isEmailSelected" @change="handleIndividualToggle('isEmailNotify', isEmailSelected)"></UToggle>
             </div>
             <div class="flex flex row justify-between ml-10">
               <p>Push to Browser Popup</p>
-              <UToggle v-model="isWebPushSelected" @change="handleIndividualToggle('isWebPushNotify', isWebPushSelected)"></UToggle>
+              <UToggle disabled v-model="isWebPushSelected" @change="handleIndividualToggle('isWebPushNotify', isWebPushSelected)"></UToggle>
             </div>
             <UDivider></UDivider>
             <div class="flex flex row justify-between">
@@ -89,15 +89,15 @@
             </div>
             <div class="flex flex row justify-between ml-10">
               <p>Send to Inbox</p>
-              <UToggle v-model="isInboxMessageSelected" @change="handleIndividualToggle('isInboxMessage', isInboxMessageSelected)"></UToggle>
+              <UToggle disabled v-model="isInboxMessageSelected" @change="handleIndividualToggle('isInboxMessage', isInboxMessageSelected)"></UToggle>
             </div>
             <div class="flex flex row justify-between ml-10">
               <p>Send to Email</p>
-              <UToggle v-model="isEmailMessageSelected" @change="handleIndividualToggle('isEmailMessage', isEmailMessageSelected)"></UToggle>
+              <UToggle disabled v-model="isEmailMessageSelected" @change="handleIndividualToggle('isEmailMessage', isEmailMessageSelected)"></UToggle>
             </div>
             <div class="flex flex row justify-between ml-10">
               <p>Send to Browser Popup</p>
-              <UToggle v-model="isWebPushMessageSelected" @change="handleIndividualToggle('isWebPushMessage', isWebPushMessageSelected)"></UToggle>
+              <UToggle disabled v-model="isWebPushMessageSelected" @change="handleIndividualToggle('isWebPushMessage', isWebPushMessageSelected)"></UToggle>
             </div>
           </div>
         </UCard>
