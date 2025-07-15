@@ -1,6 +1,6 @@
 import { H3Event } from 'h3';
-import { graphqlFetch } from '~/server/utils/graphqlFetch'; 
-import graphqlParse from '~/server/utils/graphql-parse';
+import { graphqlFetch } from './../utils/graphqlFetch'; 
+import graphqlParse from './../utils/graphql-parse';
 
 // --- Interfaces for LeetCode API Responses ---
 interface AcSubmissionNum { difficulty: string; count: number; submissions: number; }
@@ -122,7 +122,7 @@ async function fetchUserProfileAndRecentSubmissionsFromLeetCode(
     }
 
     try {
-        const response = await graphqlFetch(event, query, { username, numRecentSubmission });
+        const response = await graphqlFetch(query, { username, numRecentSubmission });
         const data = response?.data;
         if (data && data.matchedUser) {
             return {
@@ -166,7 +166,7 @@ async function fetchUserCalendarFromLeetCode(event: H3Event, username: string, y
     }
 
     try {
-        const response = await graphqlFetch(event, query, { username, year });
+        const response = await graphqlFetch(query, { username, year });
         const data = response?.data;
         if (data && data.matchedUser && data.matchedUser.userCalendar) {
             return data.matchedUser.userCalendar;
@@ -192,10 +192,10 @@ async function fetchUserContestRankingFromLeetCode(event: H3Event, username: str
     }
 
     try {
-        const response = await graphqlFetch(event, query, { username });
+        const response = await graphqlFetch(query, { username });
         const data = response?.data;
-        if (data && data.streakCounter.streakCount) {
-            return data.streakCounter.streakCount;
+        if (data && data.streakCount) {
+            return data.streakCount;
         }
     } catch (error) {
         console.error(`Error fetching user contest ranking for ${username}:`, error);
@@ -220,7 +220,7 @@ async function fetchUserLanguageProblemCountFromLeetCode(event: H3Event, usernam
     }
 
     try {
-        const response = await graphqlFetch(event, query, { username });
+        const response = await graphqlFetch(query, { username });
         const data = response?.data;
         if (data && data.matchedUser && data.matchedUser.languageProblemCount) {
             return data.matchedUser.languageProblemCount;
@@ -246,7 +246,7 @@ async function fetchUserQuestionProgressFromLeetCode(event: H3Event, username: s
     }
 
     try {
-        const response = await graphqlFetch(event, query, { username });
+        const response = await graphqlFetch(query, { username });
         const data = response?.data;
         if (data && data.userProfileUserQuestionProgressV2) {
             return data.userProfileUserQuestionProgressV2;
@@ -271,7 +271,7 @@ async function fetchAllProblemsCountFromLeetCode(event: H3Event): Promise<AllQue
     }
 
     try {
-        const response = await graphqlFetch(event, query); 
+        const response = await graphqlFetch(query); 
         const data = response?.data;
         if (data && data.allQuestionsCount) {
             return data.allQuestionsCount;
@@ -296,7 +296,7 @@ async function fetchDailyCodingChallengeQuestionFromLeetCode(event: H3Event): Pr
     }
 
     try {
-        const response = await graphqlFetch(event, query); 
+        const response = await graphqlFetch(query); 
         const data = response?.data;
         if (data && data.activeDailyCodingChallengeQuestion) {
             return data.activeDailyCodingChallengeQuestion;
@@ -322,11 +322,11 @@ async function fetchStreakCounterFromLeetCode(event: H3Event): Promise<StreakCou
     }
 
     try {
-        const response = await graphqlFetch(event, query); // No variables needed, but pass event for auth
+        const response = await graphqlFetch(query); // No variables needed, but pass event for auth
         const data = response?.data;
         
-        if (data && data.streakCounter) {
-            return data.streakCounter;
+        if (data && data.streakCount) {
+            return data.streakCount;
         }
     } catch (error) {
         console.error(`Error fetching streak counter:`, error);
@@ -349,7 +349,7 @@ async function fetchCreatedPublicFavoriteListFromLeetCode(event: H3Event, userSl
     }
 
     try {
-        const response = await graphqlFetch(event, query, { userSlug });
+        const response = await graphqlFetch(query, { userSlug });
         const data = response?.data;
         if (data && data.createdPublicFavoriteList) {
             return data.createdPublicFavoriteList;
@@ -374,7 +374,7 @@ async function fetchTagProblemCountsFromLeetCode(event: H3Event, username: strin
         return null;
     }
     try {
-        const response = await graphqlFetch(event, query, { username });
+        const response = await graphqlFetch(query, { username });
         const data = response?.data;
         if (data && data.matchedUser && data.matchedUser.tagProblemCounts) {
             return data.matchedUser.tagProblemCounts;
@@ -400,7 +400,7 @@ async function fetchUserStatusFromLeetCode(event: H3Event): Promise<UserStatus |
     }
 
     try {
-        const response = await graphqlFetch(event, query); // No variables, but pass event for auth
+        const response = await graphqlFetch(query); // No variables, but pass event for auth
         const data = response?.data;
         if (data && data.userStatus) {
             return data.userStatus;

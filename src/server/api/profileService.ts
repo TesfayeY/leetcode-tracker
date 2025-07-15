@@ -21,7 +21,7 @@ export async function getLeetcodeProfile(event: H3Event, queryFile: string) {
     let variables = queryFile.includes("ActiveDays") ? { username: username, year: year } : { username: username };
     
     // CORRECTED: Pass 'event' as the first argument
-    const response = await graphqlFetch(event, query, variables);
+    const response = await graphqlFetch(query, variables);
 
     if (response.data.matchedUser === null) {
       throw createError({statusCode: 404, statusMessage: "Leetcode user not found" });
@@ -87,7 +87,7 @@ export async function addLeetcodeUsername(event: H3Event, queryFile: any) {
   try {
     const query = readGraphqlFiles(queryFile);
     // CORRECTED: Pass 'event' as the first argument
-    const response = await graphqlFetch(event, query, { username: newUserName });
+    const response = await graphqlFetch(query, { username: newUserName });
 
     if (response.data.matchedUser === null) {
       throw createError({statusCode: 404, statusMessage: "Leetcode user not found" });
@@ -129,8 +129,7 @@ export async function validateLeetcodeUsername(event: H3Event, queryFile: any) {
   // Get the CSRF token
   try {
     const query = readGraphqlFiles('getUserSession');
-    // CORRECTED: Pass 'event' as the first argument to graphqlHeaderFetch
-    const response = await graphqlHeaderFetch(event, query); // Assuming graphqlHeaderFetch takes event, query, variables, then maybe other args
+    const response = await graphqlHeaderFetch(query);
     csrf = response.headers?.getSetCookie()?.[0]?.split(';')[0]?.split('=')[1] || ''; // Add null checks
   } catch (error:any) {
     console.error('Error fetching CSRF token:', error); // Log the error for debugging
@@ -140,31 +139,7 @@ export async function validateLeetcodeUsername(event: H3Event, queryFile: any) {
   // Fetch the global state of user
   try {
     const query = readGraphqlFiles(queryFile);
-    // CORRECTED: Pass 'event' as the first argument to graphqlFetch
-    // IMPORTANT: If graphqlFetch needs csrf and sessionToken, its signature in graphqlFetch.ts
-    // must be adjusted to accept these. Currently, it expects (event, query, variables).
-    // If csrf and sessionToken are *headers* or *cookies*, they should be handled *inside* graphqlFetch.
-    // If they are specific to this call, you might need a custom fetcher or modify graphqlFetch.
-    // Based on `graphqlFetch(query, {}, csrf, sessionToken);`, it implies graphqlFetch signature is (query, variables, csrf, sessionToken)
-    // This is a mismatch with `graphqlFetch(event, query, variables)`.
-    // Let's assume you want to pass them as part of the `variables` or expect graphqlFetch to use `event` for cookies.
-
-    // If csrf and sessionToken are meant to be passed as *part of variables* for some custom LeetCode query:
-    // const response = await graphqlFetch(event, query, { /* existing vars */, csrf, sessionToken });
-
-    // OR if graphqlFetch should already manage cookies from `event`:
-    const response = await graphqlFetch(event, query, {}); // Assuming `sessionToken` is what you mean by `cookies` in graphqlFetch logic
-
-    // If you specifically need to pass CSRF and SessionToken as distinct arguments beyond variables,
-    // your `graphqlFetch` signature needs to be:
-    // export async function graphqlFetch<T>(event: H3Event, query: string, variables?: Record<string, any>, csrfToken?: string, sessionCookie?: string) { ... }
-    // And then your call here would be:
-    // const response = await graphqlFetch(event, query, {}, csrf, sessionToken); // This matches your original intent
-    // Make sure your graphqlFetch.ts file actually uses these additional arguments if you pass them.
-    // The `graphqlFetch` in your `graphqlFetch.ts` already reads cookies from `event.node.req.headers.cookie`,
-    // so `sessionToken` (which sounds like a cookie) should be part of that. The `csrf` is also derived from cookies.
-    // So, the original `graphqlFetch(event, query, variables)` is probably sufficient if you expect the cookies to be on the `event`.
-    // The previous call `graphqlFetch(query, {}, csrf, sessionToken);` was fundamentally misaligned.
+    const response = await graphqlFetch(query, {}, csrf, sessionToken);
 
     if (response === null) {
       throw createError({ statusCode: 500, statusMessage: "Server error" });
