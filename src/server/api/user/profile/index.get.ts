@@ -1,38 +1,55 @@
 // server/api/user/profile.get.ts
+import { defineEventHandler, getQuery, getCookie, createError, H3Event } from 'h3';
+import { PrismaClient } from '@prisma/client';
 
-import { defineEventHandler, getQuery, getCookie, createError } from 'h3'; // Ensure getQuery, getCookie, createError are imported
-import { getLeetcodeProfile } from '../../profileService';
-import { PrismaClient } from '@prisma/client'; // Import PrismaClient
+import {
+    getUserProfileAndRecentSubmissionsCached,
+    getUserCalendarCached,
+    getUserLanguageProblemCountCached,
+    getUserQuestionProgressCached,
+    getUserContestRankingCached,
+    getStreakCounterCached, // Requires authentication to LeetCode
+    getTagProblemCountsCached,
+    getUserStatusCached, // Requires authentication to LeetCode
+    
+} from '~/server/services/cacheService'; 
 
-const prisma = new PrismaClient(); // Initialize PrismaClient
+let prisma: PrismaClient;
 
-export default defineEventHandler(async (event) => {
+if (process.env.NODE_ENV === 'production') {
+  prisma = new PrismaClient();
+} else {
+  // @ts-ignore
+  if (!globalThis.prisma) {
+    // @ts-ignore
+    globalThis.prisma = new PrismaClient();
+  }
+  // @ts-ignore
+  prisma = globalThis.prisma;
+}
+
+export default defineEventHandler(async (event: H3Event) => {
   if (event.req.method !== 'GET') {
-    event.res.statusCode = 405;
-    console.log('Method not allowed');
-    return { message: 'Method not allowed' };
+    throw createError({ statusCode: 405, statusMessage: 'Method Not Allowed' });
   }
 
-  // --- Start of added/modified logic ---
-
-  // Get lcUsername from query parameters
-  const { lcUsername, username } = getQuery(event);
+  const { lcUsername } = getQuery(event);
   if (typeof lcUsername !== 'string' || !lcUsername.trim()) {
     throw createError({
       statusCode: 400,
       statusMessage: 'Bad Request',
-      message: 'LeetCode username is required.',
+      message: 'LeetCode username (lcUsername) is required.',
     });
   }
 
-  // Get userId from authentication cookie
+  // Get userId from authentication cookie for Prisma DB update
   const userIdCookie = getCookie(event, 'id');
   let userId: number | null = null;
   if (userIdCookie) {
     try {
-      userId = parseInt(JSON.parse(userIdCookie));
+      userId = parseInt(userIdCookie, 10);
       if (isNaN(userId)) {
-        userId = null; // Invalidate if not a valid number
+        userId = null;
       }
     } catch (e) {
       console.error('Error parsing userId cookie:', e);
@@ -40,48 +57,99 @@ export default defineEventHandler(async (event) => {
     }
   }
 
-  // --- End of added/modified logic ---
-
-  let leetcodeProfile: any = {};
-  let languageProfile: any[] = [];
-  let submissionProfile: any = {};
+  // Initialize a structure for the final combined response
+  let finalProfileResponse: any = {};
 
   try {
-    // Pass lcUsername to getLeetcodeProfile for the profile call
-    const profileResponse = await getLeetcodeProfile(event, 'getUserProfile'); // <-- Pass lcUsername here
-    leetcodeProfile = profileResponse.data;
+    const userProfileAndRecentSubmissionsData = await getUserProfileAndRecentSubmissionsCached(event, lcUsername);
 
-    // Pass lcUsername to subsequent getLeetcodeProfile calls as well
-    const langResponse = await getLeetcodeProfile(event, 'getUserLangProblemsCount');
-    languageProfile = langResponse.data?.matchedUser?.languageProblemCount || [];
+    if (!userProfileAndRecentSubmissionsData || !userProfileAndRecentSubmissionsData.userProfile) {
+      throw createError({
+        statusCode: 404,
+        statusMessage: 'Not Found',
+        message: `LeetCode profile for username '${lcUsername}' not found or failed to retrieve.`,
+      });
+    }
 
-    const submissionResponse = await getLeetcodeProfile(event, 'getUserActiveDays');
-    submissionProfile = submissionResponse.data?.matchedUser?.userCalendar || {};
+    finalProfileResponse.matchedUser = {
+      ...userProfileAndRecentSubmissionsData.userProfile,
+      recentSubmissionList: userProfileAndRecentSubmissionsData.recentSubmissions,
+    };
+
+    const userAvatarUrl = userProfileAndRecentSubmissionsData.userProfile.profile?.userAvatar;
+    if (userId && userAvatarUrl) {
+      try {
+        await prisma.user.update({
+          where: { id: userId },
+          data: { userAvatar: userAvatarUrl },
+        });
+        console.log(`[DB] Successfully updated user ${userId}'s avatar with: ${userAvatarUrl}`);
+      } catch (dbError) {
+        console.error(`[DB Error] Failed to update user ${userId}'s avatar:`, dbError);
+      }
+    }
+
+    //  Fetch User Calendar (Cached) 
+    const currentYear = new Date().getFullYear();
+    const userCalendarData = await getUserCalendarCached(event, lcUsername, currentYear) || {};
+    finalProfileResponse.matchedUser.userCalendar = userCalendarData;
+    if (userCalendarData.activeYears && Array.isArray(userCalendarData.activeYears)) {
+      userCalendarData.activeYears.sort((a: number, b: number) => b - a);
+    }
+
+    //Fetch User Language Problem Counts (Cached)
+    const userLanguageProblemCountData = await getUserLanguageProblemCountCached(event, lcUsername) || [];
+    userLanguageProblemCountData.sort((a, b) => b.problemsSolved - a.problemsSolved);
+    finalProfileResponse.matchedUser.languageProblemCount = userLanguageProblemCountData;
+
+    //Fetch User Contest Ranking (Cached) 
+    const userContestRankingData = await getUserContestRankingCached(event, lcUsername);
+    if (userContestRankingData) {
+        finalProfileResponse.matchedUser.userContestRanking = userContestRankingData;
+    }
+
+    // Fetch User Question Progress (Cached) 
+    const userQuestionProgressData = await getUserQuestionProgressCached(event, lcUsername);
+    if (userQuestionProgressData) {
+        finalProfileResponse.matchedUser.userQuestionProgress = userQuestionProgressData;
+    }
+
+    // Fetch Streak Counter (Cached) 
+    // This query usually requires authentication via cookies. Ensure graphqlFetch handles it.
+    const streakCounterData = await getStreakCounterCached(event);
+    if (streakCounterData) {
+        finalProfileResponse.streakCounter = streakCounterData;
+    }
+
+    // Fetch Tag Problem Counts (Cached)
+    const tagProblemCountsData = await getTagProblemCountsCached(event, lcUsername);
+    if (tagProblemCountsData) {
+        finalProfileResponse.matchedUser.tagProblemCounts = tagProblemCountsData;
+    }
+
+    // Fetch User Status (Cached) 
+    // This query usually requires authentication via cookies. Ensure graphqlFetch handles it.
+    const userStatusData = await getUserStatusCached(event);
+    if (userStatusData) {
+        finalProfileResponse.userStatus = userStatusData;
+    }
+
+
+
 
   } catch (error: any) {
-    console.error('Error in profile.get.ts:', error);
-    throw createError({
-      statusCode: error.statusCode || 500,
-      statusMessage: error.statusMessage || 'Internal Server Error',
-      message: error.message || 'Failed to retrieve user profile.',
-    });
-  } finally {
-    await prisma.$disconnect(); // Ensure Prisma disconnects
+    console.error('Error in /api/user/profile.get.ts:', error);
+    // Propagate specific H3 errors, otherwise return a generic 500
+    if (error.statusCode) {
+      throw error;
+    } else {
+      throw createError({
+        statusCode: 500,
+        statusMessage: 'Internal Server Error',
+        message: error.message || 'An unexpected error occurred while processing profile data.',
+      });
+    }
   }
 
-  // Sort the language in descending order on # of problems solved
-  languageProfile.sort((first, second) => second.problemsSolved - first.problemsSolved);
-  // Ensure activeYears is an array before sorting
-  if (submissionProfile.activeYears && Array.isArray(submissionProfile.activeYears)) {
-    submissionProfile.activeYears.sort((first: number, second: number) => second - first);
-  }
-
-  // Ensure these nested objects exist before assigning
-  if (!leetcodeProfile.matchedUser) {
-    leetcodeProfile.matchedUser = {};
-  }
-  leetcodeProfile.matchedUser.languageProblemsCount = languageProfile;
-  leetcodeProfile.matchedUser.userCalendar = submissionProfile;
-
-  return { data: leetcodeProfile, message: "Successfully retrieve user profile" };
+  return { data: finalProfileResponse, message: "Successfully retrieved comprehensive user profile." };
 });

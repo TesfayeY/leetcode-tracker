@@ -2,7 +2,7 @@
 export default defineNuxtConfig({
   telemetry: false,
   devtools: { enabled: true },
-  modules: ["@nuxt/ui", "@sentry/nuxt/module"],
+  modules: ["@nuxt/ui", ],//"@sentry/nuxt/module"],
 
   devServer: {
     port: Number(process.env.APP_PORT),

@@ -30,6 +30,10 @@ DB_PORT=
 APP_WORKER_USERNAME=
 APP_WORKER_PASSWORD=
 
+# Redis URL (Required for Redis connection)
+# The URL for connecting to the Redis instance
+REDIS_URL="redis://localhost:6379" (for local Redis instances)
+
 # Below are the configs for Sentry event reporting
 # The environment setting of this application to report to Sentry (development/production) (Omitted for production environment)
 SENTRY_ENV=

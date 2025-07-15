@@ -10,7 +10,7 @@ export async function getLeetcodeProblem(event: H3Event, queryFile: any) {
 
   try {
     const query = readGraphqlFiles(queryFile);
-    const response = await graphqlFetch(query);
+    const response = await graphqlFetch(event, query, {});
 
     if (response.data === null) {
       throw createError({statusCode: 404, statusMessage: "Leetcode problem not found" });
