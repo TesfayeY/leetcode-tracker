@@ -1,26 +1,27 @@
-import { readFileSync, readdirSync } from "fs";
-import { resolve, basename } from 'path';
+import { readFileSync, readdirSync } from "node:fs";
+import { resolve, basename } from 'node:path';
 
-export default function readGraphqlFiles(desiredFileName: string) {
+export default function graphqlParse(desiredFileName: string): string { 
   const graphqlDir = resolve(process.cwd(), 'src/graphql');
-  let queryString: string = '';
-
   try {
     const graphqlFiles = readdirSync(graphqlDir);
 
     for (const file of graphqlFiles) {
       if (file.endsWith('.graphql')) {
-        const filePath = resolve(graphqlDir, file);
         const fileName = basename(file, '.graphql');
         
         if (fileName === desiredFileName) {
-          queryString = readFileSync(filePath, 'utf-8');
+          const filePath = resolve(graphqlDir, file);
+          console.log(`[graphqlParse] Found and read: ${file}`);
+          return readFileSync(filePath, 'utf-8');
         }
       }
     }
-    console.log("Parse graphql complete");
-    return queryString;
+    console.warn(`[graphqlParse] GraphQL file '${desiredFileName}.graphql' not found in ${graphqlDir}.`);
+    return '';
+
   } catch (error: any) {
-    console.log("Failed to parse graphql", error);
+    console.error(`[graphqlParse] Failed to read GraphQL files from ${graphqlDir}:`, error);
+    return '';
   }
 }
