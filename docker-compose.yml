@@ -1,8 +1,14 @@
+# docker-compose.yml
+version: '3.8'
+
 services:
   app:
     build:
       context: .
       dockerfile: ./docker/Dockerfile
+    # Binding to 127.0.0.1 on the host means only local processes on the host can access it.
+    # If you need external access (e.g., from another machine for testing), remove 127.0.0.1:
+    # - "${APP_PORT}:${APP_PORT}"
     ports:
       - "127.0.0.1:${APP_PORT}:${APP_PORT}"
     volumes:
@@ -18,10 +24,14 @@ services:
     depends_on:
       db:
         condition: service_healthy
+      redis: # <-- ADDED: Dependency on the redis service
+        condition: service_started # Use service_started for redis, as healthy check might be more complex
     environment:
       PRISMA_DATABASE_CONNECTION_URL: "mysql://root:${MYSQL_ROOT_PASSWORD}@db:3306/${MYSQL_DATABASE}"
       APP_PORT: ${APP_PORT}
       DB_PORT: ${DB_PORT}
+      REDIS_URL: redis://redis:6379 # <-- ADDED: Redis URL for the Nuxt app
+      # Add any other environment variables your Nuxt app needs (e.g., SENTRY_DSN_...)
     command: /app/docker/entrypoint.sh
 
   db:
@@ -40,7 +50,28 @@ services:
       interval: 15s
       timeout: 10s
       retries: 3
+    # ADDED: volumes and networks for db, if not already implicitly part of the default bridge network.
+    # If not explicitly defined, docker-compose puts them on a default network automatically.
+    # It's good practice to define explicit networks for clarity.
+
+  redis: # <-- ADDED: Redis service definition
+    container_name: redis-service # Optional: Give it a clear name
+    image: redis:latest # Use the official Redis image
+    ports:
+      # Expose Redis port to the host if you need to connect from your host machine (e.g., redis-cli)
+      # Otherwise, you can remove this line if only the 'app' service needs to talk to it.
+      - "127.0.0.1:6380:6379"
+    volumes:
+      - redis_data:/data # Persist Redis data
+    # Healthcheck for Redis (optional but good practice)
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+    # Redis typically doesn't need to depend_on anything else
 
 volumes:
   leetcode-tracker-node-modules:
   leetcode-tracker-nuxt:
+  redis_data: # <-- ADDED: Define the volume for Redis persistence
