@@ -55,12 +55,20 @@ const isOpen = computed({
 })
 
 const inviteEmail = ref('')
-const usersToInvite = ref<{ email: string }[]>([])
+const usersToInvite = ref<{ email: string, name?: string }[]>([])
 
-function addUserToInviteList() {
+async function addUserToInviteList() {
   const email = inviteEmail.value.trim()
   if (email && !usersToInvite.value.find(u => u.email === email)) {
-    usersToInvite.value.push({ email })
+    let name = ''
+    try {
+      // Call your user search endpoint to get the username
+      const user = await $fetch(`/api/user/search?email=${encodeURIComponent(email)}`)
+      name = user?.name || ''
+    } catch (e) {
+      name = ''
+    }
+    usersToInvite.value.push({ email, name })
   }
   inviteEmail.value = ''
 }
