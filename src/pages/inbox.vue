@@ -97,6 +97,7 @@ definePageMeta({
 
 const { reportError }= useErrorLogger();
 const token = useCookie('token');
+const router = useRouter()
 const page = ref(1);
 const pageCount = NUM_INBOX_DEFAULT_DISPLAY;
 const runtimeConfig = useRuntimeConfig();
@@ -229,6 +230,7 @@ const handleAcceptInvitation = async (inbox: any) => {
     // Refresh the inbox
     await fetchUserInbox();
 
+    router.push('/welcome');
   } catch (error) {
     console.error('Failed to accept invitation:', error);
     errorInfo.value = { statusMessage: error.message || 'Failed to accept invitation.' };
