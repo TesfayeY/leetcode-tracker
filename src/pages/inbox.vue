@@ -265,6 +265,11 @@ const handleSendMessage = async () => {
   }
 }
 
+// Helper to check if a message is probably encrypted (base64 and long enough)
+function isProbablyEncrypted(str: string) {
+  return typeof str === 'string' && /^[A-Za-z0-9+/=]+$/.test(str) && str.length > 32;
+}
+
 async function fetchUserInbox() {
   try {
     const response = await $fetch(`api/inbox`, {
@@ -279,11 +284,13 @@ async function fetchUserInbox() {
       throw createError({ statusCode: 400, message: 'Bad request' });
     }
 
-    // Decrypt the message content. Wait for all decrypted messages done before assigning to inboxes
+    // Only decrypt if probably encrypted
     const decryptionPromises = response.data.map(async (element: any) => {
       return {
         ...element,
-        context: await descryptSymmetric(runtimeConfig.public.messageEncryptionKey.toString(), element.context)
+        context: isProbablyEncrypted(element.context)
+          ? await descryptSymmetric(runtimeConfig.public.messageEncryptionKey.toString(), element.context)
+          : element.context
       }
     });
 
@@ -312,11 +319,13 @@ async function fetchUserMessage(method: 'POST' | 'GET' | 'PUT' | 'DELETE', inbox
       throw createError({ statusCode: 400, message: 'Bad request' });
     }
     
-    // Decrypt the message content. Wait for all decrypted messages done before assigning to inboxes
+    // Only decrypt if probably encrypted
     const decryptionPromises = response.data.map(async (element: any) => {
       return {
         ...element,
-        context: await descryptSymmetric(runtimeConfig.public.messageEncryptionKey.toString(), element.context)
+        context: isProbablyEncrypted(element.context)
+          ? await descryptSymmetric(runtimeConfig.public.messageEncryptionKey.toString(), element.context)
+          : element.context
       }
     });
 
