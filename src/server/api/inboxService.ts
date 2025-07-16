@@ -22,7 +22,7 @@ async function getInboxFromUserId(userId: number) {
   return allUserInbox;
 }
 
-async function createMessageFromSenderRecipient(senderId: number, recipientId: number, messageContent: string, isInvitation: boolean) {
+export async function createMessageFromSenderRecipient(senderId: number, recipientId: number, messageContent: string, isInvitation: boolean) {
   if (senderId != null || recipientId != null) {
     const message = await prisma.inbox.create({
       data: {
@@ -46,6 +46,10 @@ async function createMessageFromSenderRecipient(senderId: number, recipientId: n
       throw createError({ statusCode: 500, statusMessage: 'Internal Server Error, cannot create message' })
     }
   }
+  console.log('Inbox message created');
+  console.log('Inbox message:', messageContent);
+  console.log('senderId:', senderId);
+  console.log('recipientId:', recipientId);
 }
 
 export async function getUserInboxMessages(event: H3Event) {

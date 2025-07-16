@@ -97,6 +97,7 @@ definePageMeta({
 
 const { reportError }= useErrorLogger();
 const token = useCookie('token');
+const router = useRouter()
 const page = ref(1);
 const pageCount = NUM_INBOX_DEFAULT_DISPLAY;
 const runtimeConfig = useRuntimeConfig();
@@ -211,8 +212,29 @@ onBeforeMount(async () => {
   await fetchUserInbox();
 });
 
-const handleAcceptInvitation = (inbox: any) => {
-  console.log(inbox);
+const handleAcceptInvitation = async (inbox: any) => {
+  try {
+    // Extract the uniqueGroupId from the invite message context (e.g., "Group invite: GroupName [uniqueGroupId]")
+    const match = inbox.context.match(/\[([^\]]+)\]$/);
+    if (!match) {
+      throw new Error('Could not parse group ID from invitation message.');
+    }
+    const uniqueGroupId = match[1];
+
+    // Call the join endpoint to join the group
+    await $fetch(`/api/groups/${uniqueGroupId}/join`, { method: 'POST' });
+
+    // Mark the invite as archived
+    await fetchUserMessage('PUT', inbox, { acknowledgement: 'ARCHIVED' });
+
+    // Refresh the inbox
+    await fetchUserInbox();
+
+    router.push('/welcome');
+  } catch (error) {
+    console.error('Failed to accept invitation:', error);
+    errorInfo.value = { statusMessage: error.message || 'Failed to accept invitation.' };
+  }
 }
 
 const handleReadInbox = async () => {
@@ -265,6 +287,11 @@ const handleSendMessage = async () => {
   }
 }
 
+// Helper to check if a message is probably encrypted (base64 and long enough)
+function isProbablyEncrypted(str: string) {
+  return typeof str === 'string' && /^[A-Za-z0-9+/=]+$/.test(str) && str.length > 32;
+}
+
 async function fetchUserInbox() {
   try {
     const response = await $fetch(`api/inbox`, {
@@ -279,11 +306,13 @@ async function fetchUserInbox() {
       throw createError({ statusCode: 400, message: 'Bad request' });
     }
 
-    // Decrypt the message content. Wait for all decrypted messages done before assigning to inboxes
+    // Only decrypt if probably encrypted
     const decryptionPromises = response.data.map(async (element: any) => {
       return {
         ...element,
-        context: await descryptSymmetric(runtimeConfig.public.messageEncryptionKey.toString(), element.context)
+        context: isProbablyEncrypted(element.context)
+          ? await descryptSymmetric(runtimeConfig.public.messageEncryptionKey.toString(), element.context)
+          : element.context
       }
     });
 
@@ -312,11 +341,13 @@ async function fetchUserMessage(method: 'POST' | 'GET' | 'PUT' | 'DELETE', inbox
       throw createError({ statusCode: 400, message: 'Bad request' });
     }
     
-    // Decrypt the message content. Wait for all decrypted messages done before assigning to inboxes
+    // Only decrypt if probably encrypted
     const decryptionPromises = response.data.map(async (element: any) => {
       return {
         ...element,
-        context: await descryptSymmetric(runtimeConfig.public.messageEncryptionKey.toString(), element.context)
+        context: isProbablyEncrypted(element.context)
+          ? await descryptSymmetric(runtimeConfig.public.messageEncryptionKey.toString(), element.context)
+          : element.context
       }
     });
 
