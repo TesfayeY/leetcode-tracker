@@ -211,8 +211,28 @@ onBeforeMount(async () => {
   await fetchUserInbox();
 });
 
-const handleAcceptInvitation = (inbox: any) => {
-  console.log(inbox);
+const handleAcceptInvitation = async (inbox: any) => {
+  try {
+    // Extract the uniqueGroupId from the invite message context (e.g., "Group invite: GroupName [uniqueGroupId]")
+    const match = inbox.context.match(/\[([^\]]+)\]$/);
+    if (!match) {
+      throw new Error('Could not parse group ID from invitation message.');
+    }
+    const uniqueGroupId = match[1];
+
+    // Call the join endpoint to join the group
+    await $fetch(`/api/groups/${uniqueGroupId}/join`, { method: 'POST' });
+
+    // Mark the invite as archived
+    await fetchUserMessage('PUT', inbox, { acknowledgement: 'ARCHIVED' });
+
+    // Refresh the inbox
+    await fetchUserInbox();
+
+  } catch (error) {
+    console.error('Failed to accept invitation:', error);
+    errorInfo.value = { statusMessage: error.message || 'Failed to accept invitation.' };
+  }
 }
 
 const handleReadInbox = async () => {

@@ -81,7 +81,7 @@ export default defineEventHandler(async (event) => {
 
     // Encrypt the message content before saving to inbox
     const runtimeConfig = useRuntimeConfig();
-    const messageText = `Group invite: ${group.groupName}`;
+    const messageText = `Group invite: ${group.groupName} [${group.uniqueGroupId}]`;
     console.log('Message text to encrypt:', messageText);
     
     await Promise.all(usersToAdd.map(async user => {
