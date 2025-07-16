@@ -29,6 +29,7 @@
             />
           </template>
         </UTable>
+        <div v-if="inviteError" class="text-red-600 font-semibold">{{ inviteError }}</div>
       </div>
       <template #footer>
         <div class="flex justify-end p-4">
@@ -56,6 +57,7 @@ const isOpen = computed({
 
 const inviteEmail = ref('')
 const usersToInvite = ref<{ email: string, name?: string }[]>([])
+const inviteError = ref('')
 
 async function addUserToInviteList() {
   const email = inviteEmail.value.trim()
@@ -78,8 +80,11 @@ function removeUserFromInviteList(row: { email: string }) {
 }
 
 async function sendBulkInvites() {
-  if (usersToInvite.value.length === 0) return
-
+  inviteError.value = ''
+  if (usersToInvite.value.length === 0) {
+    inviteError.value = 'Please add at least one user to invite.'
+    return
+  }
   try {
     await $fetch(`/api/groups/${props.uniqueGroupId}/invite`, {
       method: 'POST',
