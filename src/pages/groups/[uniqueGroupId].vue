@@ -51,44 +51,8 @@
       </UModal>
 
       <!-- Invite Modal -->
-      <UModal v-model="showInviteDialog">
-        <UCard :ui="{ ring:'', divide:'divide-y divide-gray-100 dark:divide-gray-800' }">
-          <template #header>
-            <div class="flex justify-between items-center">
-              <h3 class="text-lg font-semibold">Invite Users</h3>
-              <UButton icon="i-heroicons-plus" size="sm" @click="addUserToInviteList">
-                Add
-              </UButton>
-            </div>
-          </template>
-          <div class="space-y-4 p-4">
-            <UInput
-              v-model="inviteUsername"
-              placeholder="Enter username"
-              @keyup.enter="addUserToInviteList"
-            />
-            <UTable
-              :rows="usersToInvite"
-              :columns="[{ key:'name', label:'Username' }, { key:'actions', label:'' }]"
-            >
-              <template #actions-data="{ row }">
-                <UButton
-                  color="red"
-                  variant="ghost"
-                  icon="i-heroicons-trash"
-                  size="sm"
-                  @click="removeUserFromInviteList(row)"
-                />
-              </template>
-            </UTable>
-          </div>
-          <template #footer>
-            <div class="flex justify-end p-4">
-              <UButton @click="sendBulkInvites">Send Invites</UButton>
-            </div>
-          </template>
-        </UCard>
-      </UModal>
+      <InviteModal v-model="showInviteDialog" :unique-group-id="uniqueGroupId" />
+
 
       <!-- User Cards Grid -->
       <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -128,7 +92,7 @@ interface User {
   id:          number
   name:        string
   email:       string
-  lc_username: string
+  lcUsername: string
 }
 
 interface Group {
@@ -198,15 +162,15 @@ function sendBulkInvites() {
 }
 
 async function confirmLeaveGroup() {
-    try {
-      await $fetch(`/api/groups/${uniqueGroupId}/leave`, { method: 'DELETE' })
-      router.push('/welcome')
-    } catch (e) {
-      console.error('Leave failed', e)
-    } finally {
-      showLeaveGroup.value = false
-    }
+  try {
+    await $fetch(`/api/groups/${uniqueGroupId}/leave`, { method: 'DELETE' })
+    router.push('/welcome')
+  } catch (e) {
+    console.error('Leave failed', e)
+  } finally {
+    showLeaveGroup.value = false
   }
+}
 
 function viewProfile(user: User) {
   router.push(`/users/${user.email}`)
